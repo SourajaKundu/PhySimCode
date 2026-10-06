@@ -2,7 +2,7 @@
 
 Project website for **PhySimCode: A Benchmark and Evaluation Method for Physics Video to Code Generation**.
 
-Live at: https://sourajakundu.github.io/PhySImCode/
+Live at: https://sourajakundu.github.io/PhySimCode/
 
 ## Updating links
 Paper (arXiv) and code links are set at the top of `assets/js/main.js`:
