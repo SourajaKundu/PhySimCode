@@ -484,7 +484,7 @@
       const t = h('div', { class: 'sthumb', onclick: () => selectHard(s, t) },
         `<img src="videos/posters/${s.experiment}.jpg" alt="" loading="lazy"><div>${esc(pretty(s.experiment))}<small>${s.engine === 'scipy' ? 'SciPy 2D' : 'PyBullet 3D'} · #${s.sample_id} · ${nok}/14 videos</small></div>`);
       strip.append(t);
-      if (i === 5) selectHard(s, t);
+      if (s.experiment === 'center_vs_offset_seesaw') selectHard(s, t);
     });
   });
 
