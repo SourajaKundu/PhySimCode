@@ -4,6 +4,7 @@
   const LINKS = { paper: '', code: '' };
 
   const P = window.PAPER;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const h = (tag, attrs = {}, html = '') => {
@@ -16,6 +17,9 @@
     if (html) e.innerHTML = html;
     return e;
   };
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"]')) { e.preventDefault(); e.target.click(); }
+  });
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const cache = {};
   const getJSON = url => (cache[url] ??= fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.json(); }));
@@ -31,73 +35,13 @@
   const domColor = d => (P.DOMAINS[d] || {}).color || '#888';
   const M = id => P.M[id] || { name: id, color: '#888', group: 'open' };
   const logoTag = (id, cls = 'mlogo') => M(id).logo ? `<img class="${cls}" src="${M(id).logo}" alt="" loading="lazy">` : `<span class="mdot" style="background:${M(id).color}"></span>`;
-  const LOGOS = {};
-  const logoImage = (id, size) => {
-    const key = id + '@' + (size || 0);
-    if (!LOGOS[key]) { const im = size ? new Image(size, size) : new Image(); im.src = M(id).logo; LOGOS[key] = im; }
-    return LOGOS[key];
-  };
-
   // ---------- links ----------
   for (const [k, url] of Object.entries(LINKS)) {
     const b = $('#btn-' + k);
-    if (b && url) { b.href = url; b.target = '_blank'; b.classList.remove('disabled'); b.querySelector('small')?.remove(); }
+    if (b && url) { b.href = url; b.target = '_blank'; b.classList.remove('disabled'); b.removeAttribute('aria-disabled'); b.removeAttribute('tabindex'); b.rel = 'noopener'; b.querySelector('small')?.remove(); }
     else b?.addEventListener('click', e => e.preventDefault());
   }
 
-  // ---------- Chart.js defaults ----------
-  Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
-  Chart.defaults.font.size = 12;
-  Chart.defaults.color = '#4a5068';
-  Chart.defaults.plugins.legend.labels.usePointStyle = true;
-  Chart.defaults.plugins.legend.labels.boxWidth = 8;
-  Chart.defaults.plugins.tooltip.backgroundColor = '#1a1d2e';
-  Chart.defaults.plugins.tooltip.padding = 10;
-  Chart.defaults.plugins.tooltip.cornerRadius = 8;
-  Chart.defaults.maintainAspectRatio = false;
-  const grid = { color: '#eef0f6' };
-  // draws each model's company logo next to its name on a category axis
-  Chart.register({
-    id: 'axisLogos',
-    afterDraw(chart, args, opts) {
-      if (!opts || !opts.ids) return;
-      const sc = chart.scales[opts.axis], ctx = chart.ctx, S = opts.size || 16;
-      opts.ids.forEach((id, i) => {
-        const im = logoImage(id);
-        if (!im.complete) { im.addEventListener('load', () => chart.draw(), { once: true }); return; }
-        if (opts.axis === 'x') ctx.drawImage(im, sc.getPixelForTick(i) - S / 2, sc.top + 6, S, S);
-        else ctx.drawImage(im, sc.right - S - 2, sc.getPixelForTick(i) - S / 2, S, S);
-      });
-    },
-  });
-  const alpha = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
-
-  // Lazily create charts when their container first becomes visible (tabs, scrolling).
-  const lazyCharts = [];
-  const lazy = (canvasSel, make) => {
-    const c = $(canvasSel); if (!c) return;
-    const item = { c, make, chart: null };
-    lazyCharts.push(item);
-    const io = new IntersectionObserver(es => es.forEach(e => {
-      if (e.isIntersecting && !item.chart && c.offsetParent) { item.chart = make(c); io.disconnect(); }
-    }), { rootMargin: '200px' });
-    io.observe(c);
-    return item;
-  };
-  const refreshLazy = () => lazyCharts.forEach(it => {
-    if (!it.chart && it.c.offsetParent) { it.chart = it.make(it.c); }
-  });
-
-  // ---------- tabs ----------
-  $$('.tabs[data-tabs]').forEach(tabs => {
-    const root = tabs.parentElement;
-    tabs.addEventListener('click', e => {
-      const b = e.target.closest('.tab'); if (!b) return;
-      $$('.tab', tabs).forEach(t => t.classList.toggle('active', t === b));
-      $$('.tab-panel', root).forEach(p => p.classList.toggle('active', p.dataset.panel === b.dataset.tab));
-      requestAnimationFrame(refreshLazy);
-    });
-  });
   const segHandler = (sel, fn) => {
     const s = $(sel); if (!s) return;
     s.addEventListener('click', e => {
@@ -109,15 +53,23 @@
 
   // ---------- nav highlight ----------
   const navLinks = $$('.nav-links a');
+  const navToggle = $('.nav-toggle');
+  const closeNav = () => { document.body.classList.remove('nav-open'); navToggle.setAttribute('aria-expanded', 'false'); navToggle.setAttribute('aria-label', 'Open menu'); };
+  navToggle.addEventListener('click', () => {
+    const open = document.body.classList.toggle('nav-open');
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
   const secIO = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
   }), { rootMargin: '-45% 0px -50% 0px' });
-  navLinks.forEach(a => { const s = $(a.getAttribute('href')); s && secIO.observe(s); a.addEventListener('click', () => document.body.classList.remove('nav-open')); });
+  navLinks.forEach(a => { const s = $(a.getAttribute('href')); s && secIO.observe(s); a.addEventListener('click', closeNav); });
 
   // ---------- autoplay only when visible ----------
   const vidIO = new IntersectionObserver(es => es.forEach(e => {
     const v = e.target;
-    if (e.isIntersecting) { if (v.dataset.paused !== '1') v.play().catch(() => {}); }
+    if (e.isIntersecting) { if (!reducedMotion && v.dataset.paused !== '1') v.play().catch(() => {}); }
     else v.pause();
   }), { rootMargin: '100px' });
   const autoVideo = (src, cls) => {
@@ -128,16 +80,6 @@
   // ---------- data ----------
   const galleryP = getJSON('data/gallery.json');
   const hardP = getJSON('data/hard.json');
-
-  // ---------- stats count-up ----------
-  const statIO = new IntersectionObserver(es => es.forEach(e => {
-    if (!e.isIntersecting) return;
-    statIO.unobserve(e.target);
-    const b = e.target, end = +b.dataset.count, t0 = performance.now();
-    const step = t => { const p = Math.min(1, (t - t0) / 1200), v = Math.round(end * (1 - Math.pow(1 - p, 3))); b.textContent = v.toLocaleString(); if (p < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
-  }));
-  $$('[data-count]').forEach(b => statIO.observe(b));
 
   // ---------- animated demo ----------
   const demoP = getJSON('data/demo.json');
@@ -200,9 +142,9 @@
     const scoreCards = () => {
       const chips = gtNames.map(n => `<i class="${okSet.has(n) ? 'ok' : ''}">${esc(n)} ${okSet.has(n) ? '✓' : '✗'}</i>`).join('');
       const ok = okSet.size, row = (h1, val, body) => `<div class="sc"><div class="sc-h">${h1}<b>${val}</b></div>${body}</div>`;
-      return row('Physical law', `${lawEq.toFixed(1)} / 5`, `<div class="sc-bar"><span data-w="${lawEq / 5 * 100}" style="background:#8c7ae6"></span></div><div class="sc-note">3 LLM judges: does it match the law in the video?</div>`) +
+      return row('Physical law', `${lawEq.toFixed(1)} / 5`, `<div class="sc-bar"><span data-w="${lawEq / 5 * 100}" style="background:#6ec9b6"></span></div><div class="sc-note">3 LLM judges: does it match the law in the video?</div>`) +
         row('Parameters within ±20%', `${ok} / ${gtNames.length}`, `<div class="sc-params">${chips}</div>`) +
-        row('Video similarity', `${D.scores.dino.toFixed(2)} · ${D.scores.xclip.toFixed(2)}`, `<div class="sc-bar"><span data-w="${D.scores.dino * 100}" style="background:#e8707a"></span></div><div class="sc-note">DINOv2 · VideoCLIP cosine vs. the input</div>`) +
+        row('Video similarity', `${D.scores.dino.toFixed(2)} · ${D.scores.xclip.toFixed(2)}`, `<div class="sc-bar"><span data-w="${D.scores.dino * 100}" style="background:#e6b46c"></span></div><div class="sc-note">DINOv2 · VideoCLIP cosine vs. the input</div>`) +
         row('Code', D.scores.runs ? 'runs ✓' : 'crashes ✗', '<div class="sc-note">compiles, runs, and writes video.mp4</div>');
     };
     const showCards = async (instant, id) => {
@@ -274,194 +216,82 @@
     function setPlaying(p) {
       playing = p;
       $('#demo-pause').textContent = p ? '❚❚' : '▶';
+      $('#demo-pause').setAttribute('aria-label', p ? 'Pause demo' : 'Play demo');
       [vIn, vGen].forEach(v => (p && inView ? v.play().catch(() => {}) : v.pause()));
     }
-    $('#demo-pause').onclick = () => { if (cur >= STEPS.length) return go(0); setPlaying(!playing); userPaused = !playing; };
-    $('#demo-replay').onclick = () => { userPaused = false; go(0); };
-    let userPaused = false;
+    $('#demo-pause').onclick = () => { if (!started || cur >= STEPS.length) { started = true; userPaused = false; return go(0); } setPlaying(!playing); userPaused = !playing; };
+    $('#demo-replay').onclick = () => { started = true; userPaused = false; go(0); };
+    let userPaused = reducedMotion;
+    if (reducedMotion) { reset(); STEPS.forEach(s => s.run(true, runId)); cur = STEPS.length; started = true; setCaption(STEPS.length - 1); setPlaying(false); }
     new IntersectionObserver(es => es.forEach(e => {
       inView = e.isIntersecting;
-      if (inView && !started) { started = true; go(0); }
+      if (inView && !started && !reducedMotion) { started = true; go(0); }
       else if (started && cur < STEPS.length && !userPaused) setPlaying(inView);
     }), { threshold: 0.35 }).observe($('#demo'));
     requestAnimationFrame(loop);
   }
 
-  // ---------- results charts ----------
+  // ---------- result tables ----------
+  // Keep all displayed values sourced from paperdata.js. A solid highlight marks
+  // the best value; there is no heatmap or cross-metric aggregate ranking.
   const MAIN = P.MAIN;
-  const names = ids => ids.map(id => M(id).name);
-  const gcol = id => M(id).color;
-
-  let lawsChart, lawsIdx = 5;
-  lazy('#chart-laws', c => (lawsChart = new Chart(c, {
-    type: 'bar',
-    data: {
-      labels: names(MAIN),
-      datasets: [
-        { label: 'Correctness (prior knowledge)', data: MAIN.map(m => P.T3[m][1]), backgroundColor: '#d9dcef', borderRadius: 6, barPercentage: .8 },
-        { label: 'Equivalence with video (grounding)', data: MAIN.map(m => P.T3[m][5]), backgroundColor: MAIN.map(gcol), borderRadius: 6, barPercentage: .8 },
-      ],
-    },
-    options: {
-      scales: { y: { min: 1, max: 5, grid, title: { display: true, text: 'Likert score (1–5)' } }, x: { grid: { display: false }, ticks: { maxRotation: 40, minRotation: 0, autoSkip: false, padding: 26 } } },
-      plugins: { axisLogos: { axis: 'x', ids: MAIN }, tooltip: { callbacks: { afterBody: items => { const m = MAIN[items[0].dataIndex]; const corr = lawsChart.data.datasets[0].data[items[0].dataIndex]; return `Grounding gap: ${(corr - lawsChart.data.datasets[1].data[items[0].dataIndex]).toFixed(2)}`; } } } },
-    },
-  })));
-  segHandler('#laws-sub', b => {
-    lawsIdx = +b.dataset.i;
-    if (!lawsChart) return;
-    const corrIdx = lawsIdx === 4 ? 0 : 1;
-    lawsChart.data.datasets[0].data = MAIN.map(m => P.T3[m][corrIdx]);
-    lawsChart.data.datasets[0].label = corrIdx === 0 ? 'Correctness – formula (prior knowledge)' : 'Correctness – overall (prior knowledge)';
-    lawsChart.data.datasets[1].data = MAIN.map(m => P.T3[m][lawsIdx]);
-    lawsChart.data.datasets[1].label = `Equivalence – ${b.textContent.toLowerCase()} (grounding)`;
-    lawsChart.update();
-  });
-
-  let simChart;
-  const simData = k => k === 'human'
-    ? { ds: [['Physical plausibility', 0, '#74b84a'], ['Physics equivalence', 1, '#8c7ae6'], ['Appearance equivalence', 2, '#4a9be0']], min: 1, max: 5, t: 'Human Likert (1–5)' }
-    : { ds: [['DINOv2 similarity', 3, '#e8707a'], ['VideoCLIP similarity', 4, '#f08c3c']], min: 0.3, max: 0.9, t: 'Cosine similarity' };
-  const buildSim = k => {
-    const s = simData(k);
-    return { labels: names(MAIN), datasets: s.ds.map(([l, i, c]) => ({ label: l, data: MAIN.map(m => P.T4[m][i]), backgroundColor: c, borderRadius: 5 })) };
-  };
-  lazy('#chart-sim', c => (simChart = new Chart(c, {
-    type: 'bar', data: buildSim('human'),
-    options: { scales: { y: { min: 1, max: 5, grid, title: { display: true, text: 'Human Likert (1–5)' } }, x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 40, padding: 26 } } }, plugins: { axisLogos: { axis: 'x', ids: MAIN } } },
-  })));
-  segHandler('#sim-sub', b => {
-    if (!simChart) return;
-    const s = simData(b.dataset.k);
-    simChart.data = buildSim(b.dataset.k);
-    Object.assign(simChart.options.scales.y, { min: s.min, max: s.max }); simChart.options.scales.y.title.text = s.t;
-    simChart.update();
-  });
-
-  lazy('#chart-code', c => new Chart(c, {
-    type: 'line',
-    data: {
-      labels: ['CoT extracted', 'Code extracted', 'Compiles', 'Runs w/o error', 'Saves video'],
-      datasets: MAIN.map(m => ({
-        label: M(m).name, data: P.T5[m].slice(1, 6), borderColor: gcol(m), backgroundColor: gcol(m),
-        borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 7, tension: .25, borderDash: M(m).group === 'open' ? [6, 4] : [],
-      })),
-    },
-    options: {
-      interaction: { mode: 'nearest', intersect: false },
-      scales: { y: { min: 30, max: 100, grid, title: { display: true, text: '% of 2,430 inputs' } }, x: { grid } },
-      plugins: { legend: { position: 'right', labels: { usePointStyle: true, generateLabels: ch => Chart.defaults.plugins.legend.labels.generateLabels(ch).map((l, i) => ({ ...l, pointStyle: logoImage(MAIN[i], 16) })) }, onHover: (e, item, legend) => { const ch = legend.chart; ch.data.datasets.forEach((d, i) => d.borderWidth = i === item.datasetIndex ? 5 : 1.5); ch.update('none'); }, onLeave: (e, item, legend) => { legend.chart.data.datasets.forEach(d => d.borderWidth = 2.5); legend.chart.update('none'); } }, tooltip: { callbacks: { label: x => ` ${x.dataset.label}: ${x.parsed.y}%` } } },
-    },
-  }));
-
-  const labelPlugin = {
-    id: 'pointLabels',
-    afterDatasetsDraw(chart) {
-      const { ctx } = chart;
-      chart.data.datasets.forEach((ds, i) => {
-        if (!ds.pointLabel) return;
-        chart.getDatasetMeta(i).data.forEach(pt => {
-          ctx.save(); ctx.font = "600 11px 'Plus Jakarta Sans'"; ctx.fillStyle = '#1a1d2e';
-          const r = pt.options.radius || 6, im = ds.logoId ? logoImage(ds.logoId) : null;
-          if (im && im.complete) ctx.drawImage(im, pt.x + r + 4, pt.y - 7, 14, 14);
-          ctx.fillText(ds.pointLabel, pt.x + r + (im ? 22 : 4), pt.y + 4); ctx.restore();
-        });
-      });
-    },
-  };
-  lazy('#chart-param', c => new Chart(c, {
-    type: 'bubble',
-    data: {
-      datasets: MAIN.map(m => ({
-        label: M(m).name, logoId: m, pointLabel: `${M(m).name} · ${(P.T9[m][6] * 100).toFixed(1)}%`,
-        data: [{ x: P.T9[m][3], y: P.T9[m][4], r: 6 + Math.sqrt(P.T9[m][6]) * 70 }],
-        backgroundColor: alpha(gcol(m), .55), borderColor: gcol(m), borderWidth: 2,
-      })),
-    },
-    options: {
-      layout: { padding: { right: 140 } },
-      scales: {
-        x: { min: 0.17, max: 0.49, grid, title: { display: true, text: 'Naming recall (matched / GT params)' } },
-        y: { min: 0.12, max: 0.18, grid, title: { display: true, text: 'Value accuracy within ±20% (matched)' } },
-      },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: x => { const m = MAIN[x.datasetIndex]; const t = P.T9[m]; return [` ${M(m).name}`, ` naming recall ${t[3]}, value acc ${t[4]}`, ` end-to-end recovery ${(t[6] * 100).toFixed(2)}%`, ` avg params predicted ${t[1]}, parse fails ${t[0]}`]; } } } },
-    },
-    plugins: [labelPlugin],
-  }));
-
-  // full table
-  (() => {
-    const cols = [
-      ['Model', m => M(m).name, null],
-      ['Law corr.', m => P.T3[m][1], 1], ['Law eq.', m => P.T3[m][5], 1],
-      ['Plausibility', m => P.T4[m][0], 1], ['Physics eq.', m => P.T4[m][1], 1], ['Appearance eq.', m => P.T4[m][2], 1],
-      ['DINOv2', m => P.T4[m][3], 1], ['VideoCLIP', m => P.T4[m][4], 1],
-      ['Param. acc. %', m => P.T5[m][0], 1], ['Naming recall', m => P.T9[m][3], 1],
-      ['Runs w/o error %', m => P.T5[m][4], 1], ['Video save %', m => P.T5[m][5], 1], ['CodeBLEU', m => P.T5[m][6], 1],
-    ];
-    const tbl = $('#full-table');
-    let sortCol = -1, asc = false;
-    const ranges = cols.map(([, f, num]) => num ? [Math.min(...MAIN.map(f)), Math.max(...MAIN.map(f))] : null);
-    const cell = (ci, m) => {
-      const v = cols[ci][1](m);
-      if (ci === 0) return `<td>${logoTag(m)}${esc(v)}</td>`;
-      const [lo, hi] = ranges[ci], t = hi > lo ? (v - lo) / (hi - lo) : 0;
-      return `<td style="background:rgba(160,95,130,${(t * .28).toFixed(3)});${t > .97 ? 'font-weight:700' : ''}">${v}</td>`;
-    };
+  const column = (label, unit, value, digits = 2, suffix = '') => ({ label, unit, value, digits, suffix });
+  const modelColumn = column('Model', '', m => M(m).name);
+  function resultTable(selector, ids, columns, defaultSort, caption) {
+    const table = $(selector);
+    let sort = defaultSort, ascending = false;
+    const best = columns.map((c, i) => i ? Math.max(...ids.map(c.value)) : null);
     const render = () => {
-      let html = '<thead><tr>' + cols.map((c, i) => `<th data-i="${i}" class="${i === sortCol ? 'sorted' + (asc ? ' asc' : '') : ''}">${c[0]}</th>`).join('') + '</tr></thead><tbody>';
-      if (sortCol < 0) {
-        for (const [g, title] of [['closed', 'Closed-source'], ['open', 'Open-source']]) {
-          html += `<tr class="grp"><td colspan="${cols.length}">${title}</td></tr>`;
-          MAIN.filter(m => M(m).group === g).forEach(m => { html += '<tr>' + cols.map((_, i) => cell(i, m)).join('') + '</tr>'; });
-        }
-      } else {
-        const f = cols[sortCol][1];
-        [...MAIN].sort((a, b) => { const x = f(a), y = f(b); return (x > y ? 1 : x < y ? -1 : 0) * (asc ? 1 : -1); })
-          .forEach(m => { html += '<tr>' + cols.map((_, i) => cell(i, m)).join('') + '</tr>'; });
-      }
-      tbl.innerHTML = html + '</tbody>';
+      const sorted = [...ids].sort((a, b) => {
+        const x = columns[sort].value(a), y = columns[sort].value(b);
+        const comparison = typeof x === 'string' ? x.localeCompare(y) : x - y;
+        return comparison * (ascending ? 1 : -1);
+      });
+      table.innerHTML = `<caption class="sr-only">${esc(caption)}</caption><thead><tr>` + columns.map((c, i) =>
+        `<th scope="col" aria-sort="${i === sort ? (ascending ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${i}">${esc(c.label)}<span class="sort-arrow" aria-hidden="true">${i === sort ? (ascending ? '↑' : '↓') : '↕'}</span>${c.unit ? `<small>${esc(c.unit)}</small>` : ''}</button></th>`
+      ).join('') + '</tr></thead><tbody>' + sorted.map(id => '<tr>' + columns.map((c, i) => {
+        if (!i) return `<th scope="row">${logoTag(id)}<span class="model-name">${esc(M(id).name)}<small>${({ frontier: 'Frontier', closed: 'Closed-source', open: 'Open-source' })[M(id).group]}</small></span></th>`;
+        const v = c.value(id), text = v.toFixed(c.digits) + c.suffix;
+        return `<td${v === best[i] ? ' class="best"' : ''}>${v === best[i] ? `<strong>${text}</strong><span class="sr-only"> (best)</span>` : text}</td>`;
+      }).join('') + '</tr>').join('') + '</tbody>';
     };
-    tbl.addEventListener('click', e => {
-      const th = e.target.closest('th'); if (!th) return;
-      const i = +th.dataset.i;
-      if (sortCol === i) asc = !asc; else { sortCol = i; asc = i === 0; }
+    table.addEventListener('click', e => {
+      const button = e.target.closest('[data-sort]');
+      if (!button) return;
+      const next = +button.dataset.sort;
+      ascending = sort === next ? !ascending : next === 0;
+      sort = next;
       render();
+      table.querySelector(`[data-sort="${sort}"]`).focus({ preventScroll: true });
     });
     render();
-  })();
-
-  // ---------- frontier charts ----------
-  const ALL14 = [...P.FRONTIER, ...MAIN];
-  const groupColor = m => ({ frontier: '#d9480f', closed: '#4263eb', open: '#2b8a3e' }[M(m).group]);
-  const hbar = (c, valFn, opts = {}) => {
-    const ids = [...ALL14].sort((a, b) => valFn(b) - valFn(a));
-    return new Chart(c, {
-      type: 'bar',
-      data: { labels: names(ids), datasets: [{ data: ids.map(valFn), backgroundColor: ids.map(m => alpha(groupColor(m), M(m).group === 'frontier' ? 1 : .5)), borderRadius: 4 }] },
-      options: {
-        indexAxis: 'y',
-        scales: { x: { grid, ...opts.x }, y: { grid: { display: false }, ticks: { font: { size: 11 }, padding: 22 } } },
-        plugins: { axisLogos: { axis: 'y', ids, size: 15 }, legend: { display: false }, tooltip: { callbacks: { label: x => ' ' + x.parsed.x + (opts.unit || '') } } },
-      },
-    });
-  };
-  lazy('#chart-f-law', c => hbar(c, m => P.T6[m][5], { x: { min: 1, max: 3.2 } }));
-  lazy('#chart-f-param', c => hbar(c, m => P.T8[m][0], { x: { min: 0, max: 20 }, unit: '%' }));
-  lazy('#chart-f-vid', c => {
-    const ids = [...ALL14].sort((a, b) => P.T7[b][0] - P.T7[a][0]);
-    return new Chart(c, {
-      type: 'bar',
-      data: { labels: names(ids), datasets: [
-        { label: 'DINOv2', data: ids.map(m => P.T7[m][0]), backgroundColor: ids.map(m => alpha(groupColor(m), M(m).group === 'frontier' ? 1 : .55)), borderRadius: 3 },
-        { label: 'VideoCLIP', data: ids.map(m => P.T7[m][1]), backgroundColor: ids.map(m => alpha(groupColor(m), .22)), borderRadius: 3 },
-      ] },
-      options: { indexAxis: 'y', scales: { x: { min: 0.3, max: 0.95, grid }, y: { grid: { display: false }, ticks: { font: { size: 11 }, padding: 22 } } }, plugins: { axisLogos: { axis: 'y', ids, size: 15 }, legend: { display: false } } },
-    });
-  });
+  }
+  resultTable('#full-table', MAIN, [modelColumn,
+    column('Law validity', '1–5 · LLM judges', m => P.T3[m][1]),
+    column('Law match', '1–5 · LLM judges', m => P.T3[m][5]),
+    column('Physics match', '1–5 · human raters', m => P.T4[m][1]),
+    column('Parameters recovered', 'within ±20%', m => P.T5[m][0], 2, '%'),
+    column('Code runs', 'without errors', m => P.T5[m][4], 1, '%'),
+  ], 3, 'Main benchmark: ten models on 2,430 videos. Higher is better.');
+  resultTable('#extra-table', MAIN, [modelColumn,
+    column('Plausibility', '1–5 · human raters', m => P.T4[m][0]),
+    column('Appearance match', '1–5 · human raters', m => P.T4[m][2]),
+    column('DINOv2', 'cosine similarity', m => P.T4[m][3], 3),
+    column('VideoCLIP', 'cosine similarity', m => P.T4[m][4], 3),
+    column('Parameters named', 'ground-truth recall', m => P.T9[m][3] * 100, 1, '%'),
+    column('Video saved', 'share of inputs', m => P.T5[m][5], 1, '%'),
+    column('CodeBLEU', 'code similarity', m => P.T5[m][6], 3),
+  ], 1, 'Additional metrics on the main benchmark. Higher is better.');
+  resultTable('#frontier-table', [...P.FRONTIER, ...MAIN], [modelColumn,
+    column('Law match', '1–5 · LLM judges', m => P.T6[m][5]),
+    column('Parameters recovered', 'within ±20%', m => P.T8[m][0], 2, '%'),
+    column('DINOv2', 'cosine similarity', m => P.T7[m][0], 3),
+    column('VideoCLIP', 'cosine similarity', m => P.T7[m][1], 3),
+  ], 1, 'Separate evaluation: fourteen models on ten hand-picked hard samples. Higher is better.');
 
   // ---------- comparator ----------
-  const cmp = { detail: null, playing: true, speed: 1 };
+  const cmp = { detail: null, playing: !reducedMotion, speed: 1 };
+  $('#cmp-play').textContent = cmp.playing ? '❚❚ Pause all' : '▶ Play all';
   const cmpVideos = () => $$('#comparator video');
   const applyPlayback = () => cmpVideos().forEach(v => {
     v.playbackRate = cmp.speed;
@@ -481,7 +311,7 @@
     const strip = $('#sample-strip');
     list.forEach((s, i) => {
       const nok = Object.values(s.available).filter(Boolean).length;
-      const t = h('div', { class: 'sthumb', onclick: () => selectHard(s, t) },
+      const t = h('div', { class: 'sthumb', role: 'button', tabindex: '0', 'aria-label': `Compare ${pretty(s.experiment)}`, onclick: () => selectHard(s, t) },
         `<img src="videos/posters/${s.experiment}.jpg" alt="" loading="lazy"><div>${esc(pretty(s.experiment))}<small>${s.engine === 'scipy' ? 'SciPy 2D' : 'PyBullet 3D'} · #${s.sample_id} · ${nok}/14 videos</small></div>`);
       strip.append(t);
       if (i === 5) selectHard(s, t);
@@ -502,7 +332,7 @@
         const box = $('#cmp-grid-' + g); box.innerHTML = '';
         Object.keys(d.models).filter(m => M(m).group === g).forEach(m => {
           const md = d.models[m], ps = paramSummary(md.param_eval, Object.keys(d.gt.gt_parameters || {}).length);
-          const tile = h('div', { class: 'tile', style: { '--c': M(m).color }, onclick: () => openPred(d, m) });
+          const tile = h('div', { class: 'tile', role: 'button', tabindex: '0', 'aria-label': `View ${M(m).name} prediction`, style: { '--c': M(m).color }, onclick: () => openPred(d, m) });
           if (md.video) tile.append(autoVideo(`videos/hard/${s.tag}/${m}.mp4`));
           else tile.append(h('div', { class: 'failed' }, `<div>✕ Failed<small>no video produced</small></div>`));
           tile.append(h('div', { class: 'tile-label' }, `${logoTag(m)}${esc(M(m).name)}`));
@@ -570,10 +400,19 @@
 
   // ---------- modal ----------
   const modal = $('#modal');
-  const closeModal = () => { modal.classList.remove('open'); $('#modal-media').innerHTML = ''; document.body.style.overflow = ''; };
+  let modalTrigger = null;
+  const closeModal = () => { if (!modal.classList.contains('open')) return; modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); modalTrigger?.focus(); $('#modal-media').innerHTML = ''; document.body.style.overflow = ''; };
   modal.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  modal.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const controls = $$('button, a[href], input, select, video[controls], [tabindex="0"]', modal).filter(el => el.getClientRects().length);
+    const first = controls[0], last = controls[controls.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
   const openModal = ({ head, video, videoNote, tabs }) => {
+    modalTrigger = document.activeElement;
     $('#modal-head').innerHTML = head;
     const media = $('#modal-media'); media.innerHTML = '';
     if (video) {
@@ -587,7 +426,7 @@
       b.onclick = () => { $$('.tab', tb).forEach(x => x.classList.toggle('active', x === b)); $$('.mpanel', panels).forEach(x => x.classList.toggle('active', x === p)); };
       tb.append(b); panels.append(p);
     });
-    modal.classList.add('open'); document.body.style.overflow = 'hidden';
+    modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); $('.modal-close').focus(); document.body.style.overflow = 'hidden';
     panels.scrollTop = 0;
   };
   const metaTags = x => `<div class="gmeta"><span class="dtag" style="--c:${domColor(x.domain)}">${esc(x.domain)}</span><span class="pill">${x.engine === 'scipy' ? 'SciPy · 2D' : 'PyBullet · 3D'}</span>${x.n_rand ? `<span class="pill">n<sub>rand</sub> = ${x.n_rand}</span>` : ''}${x.samples ? `<span class="pill">${x.samples.toLocaleString()} samples</span>` : ''}<span class="pill">sample #${esc(x.sample_id)}</span></div>`;
@@ -640,7 +479,7 @@
 
   // ---------- gallery ----------
   const gstate = { domain: 'all', engine: 'all', q: '', limit: 24 };
-  let gallery = [], donut;
+  let gallery = [];
   galleryP.then(g => {
     gallery = g;
     const chips = $('#domain-chips');
@@ -653,14 +492,6 @@
   const setDomain = d => {
     gstate.domain = d; gstate.limit = 24;
     $$('#domain-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.d === d));
-    if (donut) {
-      const keys = Object.keys(P.DOMAINS);
-      donut.data.datasets[0].offset = keys.map(k => k === d ? 18 : 0);
-      donut.data.datasets[0].backgroundColor = keys.map(k => d === 'all' || k === d ? P.DOMAINS[k].color : alpha(P.DOMAINS[k].color, .25));
-      donut.update();
-    }
-    $('#donut-n').textContent = d === 'all' ? 162 : P.DOMAINS[d].n;
-    $('#donut-label').textContent = d === 'all' ? 'experiments' : d;
     renderGallery();
   };
   segHandler('#engine-seg', b => { gstate.engine = b.dataset.e; gstate.limit = 24; renderGallery(); });
@@ -671,7 +502,7 @@
       (!gstate.q || (x.experiment.replace(/_/g, ' ') + ' ' + x.law + ' ' + x.domain).toLowerCase().includes(gstate.q)));
     const box = $('#gallery'); box.innerHTML = '';
     items.slice(0, gstate.limit).forEach((x, i) => {
-      const card = h('div', { class: 'gcard', style: { animationDelay: Math.min(i, 20) * 25 + 'ms' }, onclick: () => openSample(x) });
+      const card = h('div', { class: 'gcard', role: 'button', tabindex: '0', 'aria-label': `Open ${pretty(x.experiment)}`, style: { animationDelay: Math.min(i, 20) * 25 + 'ms' }, onclick: () => openSample(x) });
       const media = h('div', { class: 'gmedia' }, `<img src="videos/posters/${x.experiment}.jpg" alt="${esc(pretty(x.experiment))}" loading="lazy"><span class="eng">${x.engine === 'scipy' ? '2D · SciPy' : '3D · PyBullet'}</span><span class="play">▶</span>`);
       let v;
       const start = () => {
@@ -691,18 +522,6 @@
     }
     $('#gallery-count').textContent = `Showing ${Math.min(items.length, gstate.limit)} of ${items.length} experiments` + (items.length === 0 ? ' (try clearing filters)' : '');
   }
-
-  lazy('#chart-domains', c => (donut = new Chart(c, {
-    type: 'doughnut',
-    data: { labels: Object.keys(P.DOMAINS), datasets: [{ data: Object.values(P.DOMAINS).map(v => v.n), backgroundColor: Object.values(P.DOMAINS).map(v => v.color), borderColor: '#fff', borderWidth: 2, hoverOffset: 10, offset: 0 }] },
-    options: {
-      cutout: '62%', layout: { padding: 14 },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: x => ` ${x.label}: ${x.parsed} experiments (${(x.parsed / 1.62).toFixed(1)}%)` } } },
-      onClick: (e, els) => { if (!els.length) return; const d = Object.keys(P.DOMAINS)[els[0].index]; setDomain(gstate.domain === d ? 'all' : d); },
-      onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
-    },
-  })));
-
 
   // ---------- copy buttons ----------
   document.addEventListener('click', e => {
