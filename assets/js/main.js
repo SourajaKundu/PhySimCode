@@ -30,6 +30,13 @@
   };
   const domColor = d => (P.DOMAINS[d] || {}).color || '#888';
   const M = id => P.M[id] || { name: id, color: '#888', group: 'open' };
+  const logoTag = (id, cls = 'mlogo') => M(id).logo ? `<img class="${cls}" src="${M(id).logo}" alt="" loading="lazy">` : `<span class="mdot" style="background:${M(id).color}"></span>`;
+  const LOGOS = {};
+  const logoImage = (id, size) => {
+    const key = id + '@' + (size || 0);
+    if (!LOGOS[key]) { const im = size ? new Image(size, size) : new Image(); im.src = M(id).logo; LOGOS[key] = im; }
+    return LOGOS[key];
+  };
 
   // ---------- links ----------
   for (const [k, url] of Object.entries(LINKS)) {
@@ -49,6 +56,20 @@
   Chart.defaults.plugins.tooltip.cornerRadius = 8;
   Chart.defaults.maintainAspectRatio = false;
   const grid = { color: '#eef0f6' };
+  // draws each model's company logo next to its name on a category axis
+  Chart.register({
+    id: 'axisLogos',
+    afterDraw(chart, args, opts) {
+      if (!opts || !opts.ids) return;
+      const sc = chart.scales[opts.axis], ctx = chart.ctx, S = opts.size || 16;
+      opts.ids.forEach((id, i) => {
+        const im = logoImage(id);
+        if (!im.complete) { im.addEventListener('load', () => chart.draw(), { once: true }); return; }
+        if (opts.axis === 'x') ctx.drawImage(im, sc.getPixelForTick(i) - S / 2, sc.top + 6, S, S);
+        else ctx.drawImage(im, sc.right - S - 2, sc.getPixelForTick(i) - S / 2, S, S);
+      });
+    },
+  });
   const alpha = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
 
   // Lazily create charts when their container first becomes visible (tabs, scrolling).
@@ -282,8 +303,8 @@
       ],
     },
     options: {
-      scales: { y: { min: 1, max: 5, grid, title: { display: true, text: 'Likert score (1–5)' } }, x: { grid: { display: false }, ticks: { maxRotation: 40, minRotation: 0, autoSkip: false } } },
-      plugins: { tooltip: { callbacks: { afterBody: items => { const m = MAIN[items[0].dataIndex]; const corr = lawsChart.data.datasets[0].data[items[0].dataIndex]; return `Grounding gap: ${(corr - lawsChart.data.datasets[1].data[items[0].dataIndex]).toFixed(2)}`; } } } },
+      scales: { y: { min: 1, max: 5, grid, title: { display: true, text: 'Likert score (1–5)' } }, x: { grid: { display: false }, ticks: { maxRotation: 40, minRotation: 0, autoSkip: false, padding: 26 } } },
+      plugins: { axisLogos: { axis: 'x', ids: MAIN }, tooltip: { callbacks: { afterBody: items => { const m = MAIN[items[0].dataIndex]; const corr = lawsChart.data.datasets[0].data[items[0].dataIndex]; return `Grounding gap: ${(corr - lawsChart.data.datasets[1].data[items[0].dataIndex]).toFixed(2)}`; } } } },
     },
   })));
   segHandler('#laws-sub', b => {
@@ -307,7 +328,7 @@
   };
   lazy('#chart-sim', c => (simChart = new Chart(c, {
     type: 'bar', data: buildSim('human'),
-    options: { scales: { y: { min: 1, max: 5, grid, title: { display: true, text: 'Human Likert (1–5)' } }, x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 40 } } } },
+    options: { scales: { y: { min: 1, max: 5, grid, title: { display: true, text: 'Human Likert (1–5)' } }, x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 40, padding: 26 } } }, plugins: { axisLogos: { axis: 'x', ids: MAIN } } },
   })));
   segHandler('#sim-sub', b => {
     if (!simChart) return;
@@ -329,7 +350,7 @@
     options: {
       interaction: { mode: 'nearest', intersect: false },
       scales: { y: { min: 30, max: 100, grid, title: { display: true, text: '% of 2,430 inputs' } }, x: { grid } },
-      plugins: { legend: { position: 'right', onHover: (e, item, legend) => { const ch = legend.chart; ch.data.datasets.forEach((d, i) => d.borderWidth = i === item.datasetIndex ? 5 : 1.5); ch.update('none'); }, onLeave: (e, item, legend) => { legend.chart.data.datasets.forEach(d => d.borderWidth = 2.5); legend.chart.update('none'); } }, tooltip: { callbacks: { label: x => ` ${x.dataset.label}: ${x.parsed.y}%` } } },
+      plugins: { legend: { position: 'right', labels: { usePointStyle: true, generateLabels: ch => Chart.defaults.plugins.legend.labels.generateLabels(ch).map((l, i) => ({ ...l, pointStyle: logoImage(MAIN[i], 16) })) }, onHover: (e, item, legend) => { const ch = legend.chart; ch.data.datasets.forEach((d, i) => d.borderWidth = i === item.datasetIndex ? 5 : 1.5); ch.update('none'); }, onLeave: (e, item, legend) => { legend.chart.data.datasets.forEach(d => d.borderWidth = 2.5); legend.chart.update('none'); } }, tooltip: { callbacks: { label: x => ` ${x.dataset.label}: ${x.parsed.y}%` } } },
     },
   }));
 
@@ -341,8 +362,9 @@
         if (!ds.pointLabel) return;
         chart.getDatasetMeta(i).data.forEach(pt => {
           ctx.save(); ctx.font = "600 11px 'Plus Jakarta Sans'"; ctx.fillStyle = '#1a1d2e';
-          const r = pt.options.radius || 6;
-          ctx.fillText(ds.pointLabel, pt.x + r + 4, pt.y + 4); ctx.restore();
+          const r = pt.options.radius || 6, im = ds.logoId ? logoImage(ds.logoId) : null;
+          if (im && im.complete) ctx.drawImage(im, pt.x + r + 4, pt.y - 7, 14, 14);
+          ctx.fillText(ds.pointLabel, pt.x + r + (im ? 22 : 4), pt.y + 4); ctx.restore();
         });
       });
     },
@@ -351,13 +373,13 @@
     type: 'bubble',
     data: {
       datasets: MAIN.map(m => ({
-        label: M(m).name, pointLabel: `${M(m).name} · ${(P.T9[m][6] * 100).toFixed(1)}%`,
+        label: M(m).name, logoId: m, pointLabel: `${M(m).name} · ${(P.T9[m][6] * 100).toFixed(1)}%`,
         data: [{ x: P.T9[m][3], y: P.T9[m][4], r: 6 + Math.sqrt(P.T9[m][6]) * 70 }],
         backgroundColor: alpha(gcol(m), .55), borderColor: gcol(m), borderWidth: 2,
       })),
     },
     options: {
-      layout: { padding: { right: 120 } },
+      layout: { padding: { right: 140 } },
       scales: {
         x: { min: 0.17, max: 0.49, grid, title: { display: true, text: 'Naming recall (matched / GT params)' } },
         y: { min: 0.12, max: 0.18, grid, title: { display: true, text: 'Value accuracy within ±20% (matched)' } },
@@ -382,7 +404,7 @@
     const ranges = cols.map(([, f, num]) => num ? [Math.min(...MAIN.map(f)), Math.max(...MAIN.map(f))] : null);
     const cell = (ci, m) => {
       const v = cols[ci][1](m);
-      if (ci === 0) return `<td><span class="mdot" style="background:${gcol(m)}"></span>${esc(v)}</td>`;
+      if (ci === 0) return `<td>${logoTag(m)}${esc(v)}</td>`;
       const [lo, hi] = ranges[ci], t = hi > lo ? (v - lo) / (hi - lo) : 0;
       return `<td style="background:rgba(160,95,130,${(t * .28).toFixed(3)});${t > .97 ? 'font-weight:700' : ''}">${v}</td>`;
     };
@@ -419,8 +441,8 @@
       data: { labels: names(ids), datasets: [{ data: ids.map(valFn), backgroundColor: ids.map(m => alpha(groupColor(m), M(m).group === 'frontier' ? 1 : .5)), borderRadius: 4 }] },
       options: {
         indexAxis: 'y',
-        scales: { x: { grid, ...opts.x }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: x => ' ' + x.parsed.x + (opts.unit || '') } } },
+        scales: { x: { grid, ...opts.x }, y: { grid: { display: false }, ticks: { font: { size: 11 }, padding: 22 } } },
+        plugins: { axisLogos: { axis: 'y', ids, size: 15 }, legend: { display: false }, tooltip: { callbacks: { label: x => ' ' + x.parsed.x + (opts.unit || '') } } },
       },
     });
   };
@@ -434,7 +456,7 @@
         { label: 'DINOv2', data: ids.map(m => P.T7[m][0]), backgroundColor: ids.map(m => alpha(groupColor(m), M(m).group === 'frontier' ? 1 : .55)), borderRadius: 3 },
         { label: 'VideoCLIP', data: ids.map(m => P.T7[m][1]), backgroundColor: ids.map(m => alpha(groupColor(m), .22)), borderRadius: 3 },
       ] },
-      options: { indexAxis: 'y', scales: { x: { min: 0.3, max: 0.95, grid }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }, plugins: { legend: { display: false } } },
+      options: { indexAxis: 'y', scales: { x: { min: 0.3, max: 0.95, grid }, y: { grid: { display: false }, ticks: { font: { size: 11 }, padding: 22 } } }, plugins: { axisLogos: { axis: 'y', ids, size: 15 }, legend: { display: false } } },
     });
   });
 
@@ -483,7 +505,7 @@
           const tile = h('div', { class: 'tile', style: { '--c': M(m).color }, onclick: () => openPred(d, m) });
           if (md.video) tile.append(autoVideo(`videos/hard/${s.tag}/${m}.mp4`));
           else tile.append(h('div', { class: 'failed' }, `<div>✕ Failed<small>no video produced</small></div>`));
-          tile.append(h('div', { class: 'tile-label' }, `<span class="mdot" style="background:${M(m).color}"></span>${esc(M(m).name)}`));
+          tile.append(h('div', { class: 'tile-label' }, `${logoTag(m)}${esc(M(m).name)}`));
           const pills = h('div', { class: 'tile-stats' });
           if (ps && ps.gt) pills.innerHTML = `<span class="pill ${ps.n > 0 ? 'good' : 'bad'}" title="GT parameters named and estimated within ±20%">±20%: ${ps.n}/${ps.gt}</span><span class="pill" title="GT parameters the model named">named ${ps.matched}/${ps.gt}</span>`;
           else pills.innerHTML = `<span class="pill bad">no parsable CoT</span>`;
@@ -609,7 +631,7 @@
         <table class="ptable"><thead><tr><th>GT name</th><th>GT value</th><th>Predicted as</th><th>Pred. value</th><th>Rel. err.</th><th>±20%</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
     }
     openModal({
-      head: `<h3><span class="mdot" style="background:${M(m).color};width:12px;height:12px"></span>${esc(M(m).name)} <span class="badge ${M(m).group}">${M(m).group}</span></h3><div class="gmeta"><span class="pill">${esc(pretty(d.experiment))}</span><span class="pill">${d.engine}</span><span class="pill">sample #${d.sample_id}</span>${md.completion_tokens ? `<span class="pill">${md.completion_tokens.toLocaleString()} output tokens</span>` : ''}</div>`,
+      head: `<h3>${logoTag(m, 'mlogo lg')}${esc(M(m).name)} <span class="badge ${M(m).group}">${M(m).group}</span></h3><div class="gmeta"><span class="pill">${esc(pretty(d.experiment))}</span><span class="pill">${d.engine}</span><span class="pill">sample #${d.sample_id}</span>${md.completion_tokens ? `<span class="pill">${md.completion_tokens.toLocaleString()} output tokens</span>` : ''}</div>`,
       video: md.video ? `videos/hard/${d.experiment}_${d.sample_id}/${m}.mp4` : null,
       videoNote: md.video ? 'Video rendered by executing the model-generated code.' : 'The generated code did not produce a video (parse, runtime, or truncation failure).',
       tabs: [['Law', lawCmp], ['Parameters vs GT', ptab], ['Generated code', codeBlock(md.code)], ['Full CoT', renderCoT(cot) + (cot && cot.parameters ? `<div class="cot-sec"><div class="ck">parameters</div>${paramRows(null, cot.parameters)}</div>` : '')]],

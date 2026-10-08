@@ -523,3 +523,6 @@ body { word-spacing: .07em; letter-spacing: .003em; }
 .dp-in { justify-content: center; }
 @media (max-width: 900px) { .demo-stage { height: auto; } }
 .dp-in { align-self: center; }
+.mlogo { width: 16px; height: 16px; object-fit: contain; vertical-align: -3px; margin-right: .45rem; flex: none; }
+.mlogo.lg { width: 22px; height: 22px; vertical-align: -4px; margin-right: .5rem; }
+.tile-label .mlogo { margin-right: .1rem; }
