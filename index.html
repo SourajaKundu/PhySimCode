@@ -22,6 +22,7 @@
   <a class="brand" href="#top"><span class="brand-mark">⟨φ⟩</span> PhySimCode</a>
   <button class="nav-toggle" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
   <div class="nav-links">
+    <a href="#demo-sec">Demo</a>
     <a href="#task">Task</a>
     <a href="#results">Results</a>
     <a href="#frontier">Frontier models</a>
@@ -65,14 +66,68 @@
       <a class="btn btn-color" href="#dataset"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" fill="none" stroke="currentColor" stroke-width="2"/></svg>Explore the dataset</a>
       <a class="btn btn-light" href="#bibtex"><svg viewBox="0 0 24 24"><path d="M7 7h4v4H8c0 2 1 3 3 3v3c-4 0-4-4-4-6zm7 0h4v4h-3c0 2 1 3 3 3v3c-4 0-4-4-4-6z" fill="currentColor"/></svg>BibTeX</a>
     </div>
+    <p class="lede">Can a multimodal LLM watch a <span class="kw-in">2D or 3D physics video</span>, work out its <span class="kw-mid">laws and parameter values</span>, and write <span class="kw-out">code from scratch</span> that regenerates it?</p>
+    <p class="hero-body"><b>PhySimCode</b> is a benchmark of <b>160K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
+    <div class="io-row" aria-label="Input and output of the task">
+      <span class="io io-in"><b>Input</b>a physics video + engine name</span>
+      <span class="io-arr">→</span>
+      <span class="io io-model"><b>MLLM</b>reasons about the physics</span>
+      <span class="io-arr">→</span>
+      <span class="io io-out"><b>Output</b>physical law · parameter values · Python code</span>
+      <span class="io-arr">→</span>
+      <span class="io io-run"><b>Run it</b>regenerated video, scored vs. input</span>
+    </div>
   </div>
-
-  <div class="marquee" aria-label="Sample videos from the dataset">
-    <div class="marquee-row" id="marquee-1"></div>
-    <div class="marquee-row reverse" id="marquee-2"></div>
-  </div>
-  <p class="wrap caption center">Every clip above is a procedurally generated sample from PhySimCode, rendered with SciPy (2D) or PyBullet (3D). <b>Can a multimodal LLM watch it and write the code that made it?</b></p>
 </header>
+
+<section class="demo-sec" id="demo-sec" aria-label="How one task works">
+  <div class="wrap">
+    <div class="demo" id="demo">
+      <div class="demo-top">
+        <div class="demo-steps" id="demo-steps"></div>
+        <div class="demo-ctl">
+          <button class="ctl" id="demo-pause" aria-label="Pause">❚❚</button>
+          <button class="ctl" id="demo-replay" aria-label="Replay">↺</button>
+        </div>
+      </div>
+      <div class="demo-caption" id="demo-caption"></div>
+      <div class="demo-stage" id="demo-stage">
+        <div class="dp dp-in" id="dp-in">
+          <div class="dp-label"><span class="dot" style="background:#4a9be0"></span>Input video <small>balls in basin · SciPy 2D</small></div>
+          <video id="demo-in" muted loop playsinline preload="auto" poster="videos/demo/cover.jpg" src="videos/demo/input.mp4"></video>
+          <div class="frames-label">frames sent to the model (sampled at 10 fps)</div>
+          <div class="frames" id="demo-frames"><img src="videos/demo/frame0.jpg" alt=""><img src="videos/demo/frame1.jpg" alt=""><img src="videos/demo/frame2.jpg" alt=""><img src="videos/demo/frame3.jpg" alt=""><img src="videos/demo/frame4.jpg" alt=""><img src="videos/demo/frame5.jpg" alt=""></div>
+          <div class="frames-label">engine hint: <code>scipy</code></div>
+        </div>
+        <div class="dp dp-mid" id="dp-mid">
+          <div class="mllm" id="mllm"><span class="mllm-dot"></span>MLLM <small>Gemini 2.5 Pro</small></div>
+          <div class="editor">
+            <div class="ed-tabs"><span class="ed-tab" data-t="cot">cot.json</span><span class="ed-tab" data-t="code">simulation.py</span><span class="ed-tab" data-t="term">terminal</span></div>
+            <pre class="ed-body" id="ed-cot"><code></code></pre>
+            <pre class="ed-body" id="ed-code"><code></code></pre>
+            <pre class="ed-body ed-term" id="ed-term"></pre>
+          </div>
+        </div>
+        <div class="dp dp-out" id="dp-out">
+          <div class="dp-label"><span class="dot" style="background:#e8707a"></span>Regenerated video <small>from the model's code</small></div>
+          <div class="gen-wrap"><video id="demo-gen" muted loop playsinline preload="auto" src="videos/demo/generated.mp4"></video><div class="gen-empty" id="gen-empty">waiting for code…</div></div>
+          <div class="scorecard" id="scorecard"></div>
+        </div>
+        <div class="demo-finale" id="demo-finale"></div>
+        <div class="flyer-layer" id="flyer-layer"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="strip-sec" aria-label="Sample videos from the dataset">
+  <div class="strip-head wrap">
+    <h3>A peek at the dataset <span class="muted">· 2D SciPy and 3D PyBullet, side by side</span></h3>
+    <div class="strip-nav"><button class="ctl" id="strip-prev" aria-label="Scroll left">‹</button><button class="ctl" id="strip-next" aria-label="Scroll right">›</button></div>
+  </div>
+  <div class="strip" id="strip" tabindex="0"></div>
+  <p class="wrap note center">Scroll or drag sideways · click any clip to open its code, parameters and chain-of-thought</p>
+</section>
 
 <section class="stats-band">
   <div class="wrap stats-grid">
@@ -85,15 +140,6 @@
   </div>
 </section>
 
-<section class="section" id="abstract">
-  <div class="wrap narrow">
-    <h2 class="sec-title"><span class="kicker">Abstract</span>Seeing motion ≠ knowing the physics</h2>
-    <p class="lead">Multimodal large language models (MLLMs) are good at video understanding and code generation, but it is unclear whether they can recover the <b>physical laws</b> underlying videos. That capability is essential for converting videos into executable simulations and for providing structured physical supervision in robotics. A model that can caption a motion video has not necessarily inferred its governing dynamics, estimated quantitative parameters, or become able to regenerate the scene from code.</p>
-    <p>Existing video–physics benchmarks evaluate plausibility, property estimation, or future-state prediction, but they say little about whether models can translate visual dynamics into runnable simulation code. We introduce <b>PhySimCode</b>, a benchmark for <b>physics video-to-code generation</b>. Given only a raw video, a model must infer the relevant physics, recover parameter values, and generate runnable Python that reproduces the input video. The dataset contains <b>160.6K procedurally generated samples spanning 162 physics phenomena</b> across analytic SciPy simulations and PyBullet-rendered rigid-body, articulated, fluid, and contact-rich scenes. Each sample bundles the source simulation code, sampled physical parameters, rendered video, and a structured chain-of-thought covering observations, laws, ODEs, numerical methods, and validation checks.</p>
-    <p>We evaluate ten state-of-the-art closed- and open-source MLLMs (plus four newer frontier models) on physical-law correctness, simulation equivalence, code executability, and parameter recovery. Models reliably <i>state</i> physics laws (4.27–4.93/5) yet score only 1.51–2.47/5 on <i>inferring</i> them from video. The best system recovers just <b>7.7%</b> of ground-truth parameters within ±20%. This exposes a substantial <b>video-to-simulation gap</b>.</p>
-  </div>
-</section>
-
 <section class="section alt" id="task">
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">The task</span>From pixels to physics to programs</h2>
@@ -102,21 +148,21 @@
     <div class="task-flow" id="task-flow">
       <div class="tf-card tf-input">
         <div class="tf-label"><span class="dot" style="background:#4a9be0"></span>Input video</div>
-        <video id="tf-ref" muted loop playsinline autoplay preload="auto" src="videos/hard/disk_spinoff_1101/reference.mp4"></video>
-        <div class="tf-note">disk_spinoff · engine: <code>scipy</code></div>
+        <video id="tf-ref" muted loop playsinline autoplay preload="auto" src="videos/demo/input.mp4"></video>
+        <div class="tf-note">balls_in_basin #918 · engine: <code>scipy</code></div>
       </div>
       <div class="tf-arrow"><span>MLLM</span></div>
       <div class="tf-card tf-mid">
-        <div class="tf-label"><span class="dot" style="background:#8c7ae6"></span>Chain-of-thought <small>(JSON)</small></div>
-        <pre class="tf-code" id="tf-cot"></pre>
-        <div class="tf-label" style="margin-top:.6rem"><span class="dot" style="background:#38b2a0"></span>Simulation code <small>(Python)</small></div>
+        <div class="tf-label"><span class="dot" style="background:#8c7ae6"></span>Chain-of-thought <small>(JSON · scroll to read)</small></div>
+        <pre class="tf-code wrapjson" id="tf-cot"></pre>
+        <div class="tf-label" style="margin-top:.6rem"><span class="dot" style="background:#38b2a0"></span>Simulation code <small>(Python · scroll to read)</small></div>
         <pre class="tf-code small" id="tf-code"></pre>
       </div>
       <div class="tf-arrow"><span>execute</span></div>
       <div class="tf-card tf-output">
         <div class="tf-label"><span class="dot" style="background:#e8707a"></span>Regenerated video</div>
-        <video id="tf-gen" muted loop playsinline autoplay preload="auto" src="videos/hard/disk_spinoff_1101/claude_fable_5_1.mp4"></video>
-        <div class="tf-note">by Claude Fable 5.1 · scored vs. input</div>
+        <video id="tf-gen" muted loop playsinline autoplay preload="auto" src="videos/demo/generated.mp4"></video>
+        <div class="tf-note">by Gemini 2.5 Pro · law equivalence 4.0/5 · 1/8 params within ±20%</div>
       </div>
     </div>
 

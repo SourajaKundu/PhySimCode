@@ -109,21 +109,52 @@
   const galleryP = getJSON('data/gallery.json');
   const hardP = getJSON('data/hard.json');
 
-  // ---------- marquee ----------
-  const ROW1 = ['multi_physics_arena', 'three_gear_chain', 'billiards_break', 'domino_chain', 'disk_spinoff', 'bouncing_balls_arena', 'rolling_race_hoop_vs_disk_vs_sphere', 'trebuchet_throw', 'magnet_wheel', 'ball_pit_drop', 'brachistochrone_race'];
-  const ROW2 = ['tumbling_dice', 'slab_springs_block_drop', 'three_body_gravity', 'stacked_discs_topple', 'gear_rack_spring_oscillator', 'granular_hourglass_3d', 'semicircular_track', 'scissor_collapse', 'springs_two_slabs_compound', 'staircase_bounce', 'discs_friction_coupling'];
+  // ---------- dataset strip (equal SciPy / PyBullet, user-scrollable) ----------
+  const STRIP_K = ['multi_physics_arena', 'domino_chain', 'tumbling_dice', 'bouncing_balls_arena', 'trebuchet_throw', 'ball_pit_drop', 'stacked_discs_topple', 'granular_hourglass_3d', 'newton_cradle_3d', 'funnel_sorting', 'block_tower_projectile', 'wrecking_ball_pendulum'];
+  const STRIP_S = ['billiards_break', 'three_gear_chain', 'disk_spinoff', 'rolling_race_hoop_vs_disk_vs_sphere', 'magnet_wheel', 'brachistochrone_race', 'slab_springs_block_drop', 'three_body_gravity', 'gear_rack_spring_oscillator', 'semicircular_track', 'discs_friction_coupling', 'double_pendulum'];
   galleryP.then(g => {
     const by = Object.fromEntries(g.map(x => [x.experiment, x]));
-    [[ROW1, '#marquee-1'], [ROW2, '#marquee-2']].forEach(([row, sel]) => {
-      const el = $(sel);
-      for (let rep = 0; rep < 2; rep++) row.forEach(exp => {
-        const x = by[exp]; if (!x) return;
-        const item = h('div', { class: 'mq-item', title: pretty(exp), style: { '--c': domColor(x.domain), width: Math.round(150 * x.w / x.h) + 'px' }, onclick: () => openSample(x) });
-        item.append(autoVideo(`videos/gallery/${exp}.mp4`));
-        item.append(h('span', { class: 'mq-tag' }, esc(x.domain)));
-        el.append(item);
-      });
+    const order = STRIP_K.flatMap((k, i) => [k, STRIP_S[i]]).filter(e => by[e]);
+    const strip = $('#strip');
+    for (let rep = 0; rep < 2; rep++) order.forEach(exp => {
+      const x = by[exp];
+      const item = h('div', { class: 'st-item', style: { '--c': domColor(x.domain), aspectRatio: `${x.w} / ${x.h}` }, 'data-exp': exp });
+      const v = h('video', { muted: '', loop: '', playsinline: '', preload: 'none', poster: `videos/posters/${exp}.jpg` });
+      v.muted = true; v.src = `videos/gallery/${exp}.mp4`; vidIO.observe(v);
+      item.append(v);
+      item.append(h('span', { class: 'st-name' }, esc(pretty(exp))));
+      item.append(h('div', { class: 'st-tag' }, `<span class="eng">${x.engine === 'scipy' ? '2D · SciPy' : '3D · PyBullet'}</span><span>${esc(x.domain)}</span>`));
+      strip.append(item);
     });
+    // gentle auto-scroll that yields to the user
+    let pos = 0, idleUntil = 0, dragging = false, moved = 0, startX = 0, startPos = 0;
+    const SPEED = 0.06; // px per ms
+    const hold = (ms = 3000) => { idleUntil = performance.now() + ms; };
+    let lastT = performance.now();
+    const tick = t => {
+      const dt = Math.min(64, t - lastT); lastT = t;
+      const half = strip.scrollWidth / 2;
+      if (!dragging && t > idleUntil && half > strip.clientWidth) {
+        pos = strip.scrollLeft + SPEED * dt;
+        if (pos >= half) pos -= half;
+        strip.scrollLeft = pos;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    ['wheel', 'touchstart', 'focusin'].forEach(ev => strip.addEventListener(ev, () => hold(4000), { passive: true }));
+    strip.addEventListener('pointerenter', () => hold(1e9));
+    strip.addEventListener('pointerleave', () => { if (!dragging) hold(1500); });
+    strip.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; dragging = true; moved = 0; startX = e.clientX; startPos = strip.scrollLeft; strip.classList.add('drag'); });
+    window.addEventListener('pointermove', e => { if (!dragging) return; moved = Math.max(moved, Math.abs(e.clientX - startX)); strip.scrollLeft = startPos - (e.clientX - startX); });
+    window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; strip.classList.remove('drag'); hold(3000); });
+    strip.addEventListener('click', e => {
+      if (moved > 5) { moved = 0; return; }
+      const it = e.target.closest('.st-item'); if (it) openSample(by[it.dataset.exp]);
+    });
+    const step = dir => { hold(5000); strip.scrollBy({ left: dir * strip.clientWidth * 0.8, behavior: 'smooth' }); };
+    $('#strip-prev').onclick = () => step(-1);
+    $('#strip-next').onclick = () => step(1);
   });
 
   // ---------- stats count-up ----------
@@ -136,14 +167,175 @@
   }));
   $$('[data-count]').forEach(b => statIO.observe(b));
 
-  // ---------- task flow ----------
-  getJSON('data/hard/disk_spinoff_1101.json').then(d => {
-    const pred = d.models.claude_fable_5_1;
-    const cot = pred.cot || {};
-    const slim = { simulation: cot.simulation, physical_law: cot.physical_law, parameters: cot.parameters };
-    $('#tf-cot').textContent = JSON.stringify(slim, null, 1).slice(0, 1400);
-    $('#tf-code').textContent = (pred.code || '').split('\n').slice(0, 16).join('\n');
+  // ---------- task flow + animated demo ----------
+  const demoP = getJSON('data/demo.json');
+  const hl = (text, lang) => { try { return hljs.highlight(text, { language: lang }).value; } catch { return esc(text); } };
+  demoP.then(d => {
+    $('#tf-cot').innerHTML = hl(JSON.stringify(d.pred_cot, null, 2), 'json');
+    $('#tf-code').innerHTML = hl(d.pred_code || '', 'python');
   });
+  Promise.all([demoP, galleryP]).then(([d, g]) => initDemo(d, g));
+
+  function initDemo(D, gallery) {
+    const stage = $('#demo-stage'), cap = $('#demo-caption');
+    const dpIn = $('#dp-in'), dpMid = $('#dp-mid'), dpOut = $('#dp-out');
+    const vIn = $('#demo-in'), vGen = $('#demo-gen'), genWrap = $('.gen-wrap', dpOut);
+    const edCot = $('#ed-cot code'), edCode = $('#ed-code code'), edTerm = $('#ed-term');
+    const mllm = $('#mllm'), score = $('#scorecard'), finale = $('#demo-finale'), flyers = $('#flyer-layer');
+    const pe = D.param_eval, gtNames = Object.keys(D.gt_params || {});
+    const okSet = new Set((pe.matched || []).filter(m => m.within_20pct).map(m => m.gt_name));
+    const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const lawEq = avg(D.scores.law_equivalence);
+    const pc = D.pred_cot || {};
+    const slimParams = Object.fromEntries(Object.entries(pc.parameters || {}).map(([k, v]) => [k, v && typeof v === 'object' ? `${v.value}${v.unit ? ' ' + v.unit : ''}` : v]));
+    const cotText = JSON.stringify({ simulation: pc.simulation, physical_law: pc.physical_law, parameters: slimParams }, null, 2);
+    const codeText = D.pred_code || '';
+    const termText = `$ python simulation.py\n  integrating dynamics (6 balls, walls, restitution) …\n  rendering frames → video.mp4 …\n✓ done in ${(3.1).toFixed(1)} s · video.mp4 written`;
+    const FIN_K = ['multi_physics_arena', 'domino_chain', 'tumbling_dice', 'trebuchet_throw'];
+    const FIN_S = ['billiards_break', 'three_gear_chain', 'rolling_race_hoop_vs_disk_vs_sphere', 'slab_springs_block_drop'];
+    const byExp = Object.fromEntries(gallery.map(x => [x.experiment, x]));
+    FIN_K.flatMap((k, i) => [k, FIN_S[i]]).forEach((exp, i) => {
+      const x = byExp[exp]; if (!x) return;
+      const it = h('div', { class: 'fin-item', style: { transitionDelay: i * 90 + 'ms' }, onclick: () => openSample(x) });
+      const v = h('video', { muted: '', loop: '', playsinline: '', preload: 'none', poster: `videos/posters/${exp}.jpg` }); v.muted = true; v.dataset.src = `videos/gallery/${exp}.mp4`;
+      it.append(v, h('span', { class: x.engine === 'scipy' ? 'k2' : 'k3' }, x.engine === 'scipy' ? '2D · SciPy' : '3D · PyBullet'));
+      finale.append(it);
+    });
+
+    // virtual clock: everything is timed against `vt`, which only advances while playing
+    let vt = 0, last = null, playing = false, runId = 0, cur = 0, stepStart = 0, started = false, inView = false;
+    const waiters = new Set(), frameFns = new Set();
+    const CANCEL = Symbol('cancel');
+    const loop = t => {
+      if (last !== null && playing) vt += Math.min(64, t - last);
+      last = t;
+      if (playing) {
+        frameFns.forEach(f => f());
+        waiters.forEach(w => { if (vt >= w.until) { waiters.delete(w); w.resolve(); } });
+        const bar = $$('.dstep span', $('#demo-steps'));
+        bar.forEach((b, i) => { b.style.width = i < cur ? '100%' : i > cur ? '0%' : Math.min(100, (vt - stepStart) / STEPS[cur].dur * 100) + '%'; });
+      }
+      requestAnimationFrame(loop);
+    };
+    const wait = (ms, id) => new Promise((resolve, reject) => {
+      if (id !== runId) return reject(CANCEL);
+      const w = { until: vt + ms, resolve: () => (id === runId ? resolve() : reject(CANCEL)) };
+      waiters.add(w);
+    });
+    const typeInto = (el, text, ms, lang, id) => new Promise((resolve, reject) => {
+      const t0 = vt; let lastN = -1;
+      const f = () => {
+        if (id !== runId) { frameFns.delete(f); return reject(CANCEL); }
+        const n = Math.min(text.length, Math.floor(text.length * (vt - t0) / ms));
+        if (n !== lastN) {
+          lastN = n;
+          el.innerHTML = (lang ? hl(text.slice(0, n), lang) : esc(text.slice(0, n))) + (n < text.length ? '<span class="caret"></span>' : '');
+          el.parentElement.scrollTop = el.parentElement.scrollHeight;
+        }
+        if (n >= text.length) { frameFns.delete(f); resolve(); }
+      };
+      frameFns.add(f);
+    });
+    const setTab = t => { $$('.ed-tab', dpMid).forEach(x => x.classList.toggle('on', x.dataset.t === t)); [['cot', '#ed-cot'], ['code', '#ed-code'], ['term', '#ed-term']].forEach(([k, s]) => $(s).classList.toggle('on', k === t)); };
+    const focus = el => [dpIn, dpMid, dpOut].forEach(x => x.classList.toggle('focus', x === el));
+    const restartVideos = () => [vIn, vGen].forEach(v => { v.currentTime = 0; if (playing) v.play().catch(() => {}); });
+    const scoreCards = () => {
+      const chips = gtNames.map(n => `<i class="${okSet.has(n) ? 'ok' : ''}">${esc(n)} ${okSet.has(n) ? '✓' : '✗'}</i>`).join('');
+      const ok = okSet.size, row = (h1, val, body) => `<div class="sc"><div class="sc-h">${h1}<b>${val}</b></div>${body}</div>`;
+      return row('Physical law', `${lawEq.toFixed(1)} / 5`, `<div class="sc-bar"><span data-w="${lawEq / 5 * 100}" style="background:#8c7ae6"></span></div><div class="sc-note">3 LLM judges: does it match the law in the video?</div>`) +
+        row('Parameters within ±20%', `${ok} / ${gtNames.length}`, `<div class="sc-params">${chips}</div>`) +
+        row('Video similarity', `${D.scores.dino.toFixed(2)} · ${D.scores.xclip.toFixed(2)}`, `<div class="sc-bar"><span data-w="${D.scores.dino * 100}" style="background:#e8707a"></span></div><div class="sc-note">DINOv2 · VideoCLIP cosine vs. the input</div>`) +
+        row('Code', D.scores.runs ? 'runs ✓' : 'crashes ✗', '<div class="sc-note">compiles, runs, and writes video.mp4</div>');
+    };
+    const showCards = async (instant, id) => {
+      score.innerHTML = scoreCards();
+      const cards = $$('.sc', score);
+      for (const c of cards) {
+        if (!instant) await wait(650, id);
+        c.classList.add('on'); $$('[data-w]', c).forEach(b => (b.style.width = b.dataset.w + '%'));
+      }
+    };
+    const fly = () => {
+      const sr = stage.getBoundingClientRect(), vr = vIn.getBoundingClientRect(), mr = mllm.getBoundingClientRect();
+      for (let i = 0; i < 6; i++) {
+        const im = h('img', { class: 'flyer', src: `videos/demo/frame${i}.jpg`, alt: '' });
+        const x0 = vr.left - sr.left + (vr.width - 96) * (i / 5), y0 = vr.top - sr.top + vr.height * 0.25;
+        im.style.transform = `translate(${x0}px, ${y0}px)`;
+        flyers.append(im);
+        setTimeout(() => { im.style.transform = `translate(${mr.left - sr.left + mr.width / 2 - 48}px, ${mr.top - sr.top}px) scale(.35)`; im.style.opacity = '0'; }, 120 + i * 200);
+        setTimeout(() => im.remove(), 2600 + i * 200);
+      }
+    };
+    const finaleOn = on => {
+      finale.classList.toggle('on', on);
+      $$('video', finale).forEach(v => { if (on) { if (!v.src) v.src = v.dataset.src; v.play().catch(() => {}); } else v.pause(); });
+    };
+
+    const STEPS = [
+      { dur: 4200, cap: 'Input: just a video', sub: 'plus the engine name (here: SciPy). Nothing else.',
+        run: async (inst, id) => { focus(dpIn); dpMid.classList.add('dim'); dpOut.classList.add('dim'); if (!inst) { restartVideos(); } } },
+      { dur: 3600, cap: 'The MLLM watches the frames', sub: '',
+        run: async (inst, id) => { dpMid.classList.remove('dim'); focus(dpMid); mllm.classList.add('busy'); setTab('cot'); if (!inst) fly(); } },
+      { dur: 7600, cap: 'It infers the physics', sub: 'the governing law and every parameter value, as JSON',
+        run: async (inst, id) => { setTab('cot'); if (inst) edCot.innerHTML = hl(cotText, 'json'); else await typeInto(edCot, cotText, 6600, 'json', id); } },
+      { dur: 7200, cap: 'It writes the simulation from scratch', sub: 'self-contained Python: NumPy, SciPy, Matplotlib',
+        run: async (inst, id) => { setTab('code'); if (inst) edCode.innerHTML = hl(codeText, 'python'); else await typeInto(edCode, codeText, 6400, 'python', id); } },
+      { dur: 4600, cap: 'We run the code', sub: 'it renders a brand-new video',
+        run: async (inst, id) => {
+          setTab('term'); mllm.classList.remove('busy');
+          if (inst) edTerm.textContent = termText; else await typeInto(edTerm, termText, 1600, null, id);
+          dpOut.classList.remove('dim'); focus(dpOut); genWrap.classList.add('on'); if (!inst) restartVideos();
+        } },
+      { dur: 6200, cap: 'We score it against the input', sub: 'law · parameters · video · code',
+        run: async (inst, id) => { focus(dpOut); await showCards(inst, id); } },
+      { dur: 6500, cap: 'Same task: 162 phenomena, 2D and 3D', sub: '14 MLLMs evaluated. Scroll down for the results.',
+        run: async (inst, id) => { focus(null); finaleOn(true); } },
+    ];
+    const bars = $('#demo-steps');
+    STEPS.forEach((s, i) => { const b = h('button', { class: 'dstep', style: { '--w': s.dur }, title: s.cap, 'aria-label': `Step ${i + 1}: ${s.cap}` }, '<span></span>'); b.onclick = () => go(i); bars.append(b); });
+
+    const reset = () => {
+      waiters.clear(); frameFns.clear(); flyers.innerHTML = '';
+      [dpIn, dpMid, dpOut].forEach(x => x.classList.remove('dim', 'focus'));
+      mllm.classList.remove('busy'); setTab('cot');
+      edCot.innerHTML = ''; edCode.innerHTML = ''; edTerm.textContent = '';
+      genWrap.classList.remove('on'); score.innerHTML = ''; finaleOn(false);
+    };
+    const setCaption = i => {
+      cap.innerHTML = `<span class="num">${i + 1}</span>${esc(STEPS[i].cap)}${STEPS[i].sub ? `<span class="sub">${esc(STEPS[i].sub)}</span>` : ''}`;
+      cap.classList.remove('swap'); void cap.offsetWidth; cap.classList.add('swap');
+    };
+    async function go(k) {
+      const id = ++runId;
+      reset();
+      for (let i = 0; i < k; i++) await STEPS[i].run(true, id);
+      setPlaying(true);
+      try {
+        for (let i = k; i < STEPS.length; i++) {
+          cur = i; stepStart = vt; setCaption(i);
+          const t0 = vt;
+          await STEPS[i].run(false, id);
+          await wait(Math.max(0, STEPS[i].dur - (vt - t0)), id);
+        }
+        cur = STEPS.length; setPlaying(false); $('#demo-pause').textContent = '▶';
+      } catch (e) { if (e !== CANCEL) throw e; }
+    }
+    function setPlaying(p) {
+      playing = p;
+      $('#demo-pause').textContent = p ? '❚❚' : '▶';
+      [vIn, vGen].forEach(v => (p && inView ? v.play().catch(() => {}) : v.pause()));
+      $$('video', finale).forEach(v => (p && inView && finale.classList.contains('on') ? v.play().catch(() => {}) : v.pause()));
+    }
+    $('#demo-pause').onclick = () => { if (cur >= STEPS.length) return go(0); setPlaying(!playing); userPaused = !playing; };
+    $('#demo-replay').onclick = () => { userPaused = false; go(0); };
+    let userPaused = false;
+    new IntersectionObserver(es => es.forEach(e => {
+      inView = e.isIntersecting;
+      if (inView && !started) { started = true; go(0); }
+      else if (started && cur < STEPS.length && !userPaused) setPlaying(inView);
+    }), { threshold: 0.35 }).observe($('#demo'));
+    requestAnimationFrame(loop);
+  }
 
   // ---------- results charts ----------
   const MAIN = P.MAIN;
