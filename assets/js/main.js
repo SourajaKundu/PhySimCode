@@ -402,7 +402,7 @@
       const v = cols[ci][1](m);
       if (ci === 0) return `<td><span class="mdot" style="background:${gcol(m)}"></span>${esc(v)}</td>`;
       const [lo, hi] = ranges[ci], t = hi > lo ? (v - lo) / (hi - lo) : 0;
-      return `<td style="background:rgba(214,51,132,${(t * .28).toFixed(3)});${t > .97 ? 'font-weight:700' : ''}">${v}</td>`;
+      return `<td style="background:rgba(160,95,130,${(t * .28).toFixed(3)});${t > .97 ? 'font-weight:700' : ''}">${v}</td>`;
     };
     const render = () => {
       let html = '<thead><tr>' + cols.map((c, i) => `<th data-i="${i}" class="${i === sortCol ? 'sorted' + (asc ? ' asc' : '') : ''}">${c[0]}</th>`).join('') + '</tr></thead><tbody>';

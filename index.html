@@ -96,7 +96,7 @@
       <div class="demo-caption" id="demo-caption"></div>
       <div class="demo-stage" id="demo-stage">
         <div class="dp dp-in" id="dp-in">
-          <div class="dp-label"><span class="dot" style="background:#ec4899"></span>Input video <small>balls in basin · SciPy 2D</small></div>
+          <div class="dp-label"><span class="dot" style="background:#c27896"></span>Input video <small>balls in basin · SciPy 2D</small></div>
           <video id="demo-in" muted loop playsinline preload="auto" poster="videos/demo/cover.jpg" src="videos/demo/input.mp4"></video>
           <div class="frames-label">frames sent to the model (sampled at 10 fps)</div>
           <div class="frames" id="demo-frames"><img src="videos/demo/frame0.jpg" alt=""><img src="videos/demo/frame1.jpg" alt=""><img src="videos/demo/frame2.jpg" alt=""><img src="videos/demo/frame3.jpg" alt=""><img src="videos/demo/frame4.jpg" alt=""><img src="videos/demo/frame5.jpg" alt=""></div>
@@ -112,7 +112,7 @@
           </div>
         </div>
         <div class="dp dp-out" id="dp-out">
-          <div class="dp-label"><span class="dot" style="background:#f43f5e"></span>Regenerated video <small>from the model's code</small></div>
+          <div class="dp-label"><span class="dot" style="background:#c47483"></span>Regenerated video <small>from the model's code</small></div>
           <div class="gen-wrap"><video id="demo-gen" muted loop playsinline preload="auto" src="videos/demo/generated.mp4"></video><div class="gen-empty" id="gen-empty">waiting for code…</div></div>
           <div class="scorecard" id="scorecard"></div>
         </div>
@@ -138,22 +138,22 @@
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Key findings</span>Four consistent gaps</h2>
     <div class="finding-grid">
-      <div class="finding" style="--c:#b84fd6">
+      <div class="finding" style="--c:#9a74ae">
         <div class="big">4.5<small>/5</small> <span class="vs">vs</span> 2.47<small>/5</small></div>
         <h4>Knowing ≠ inferring</h4>
         <p>Nearly every model states physical laws correctly (&gt;4.5/5), but the best (GPT-5 Mini) scores only 2.47/5 at recognizing the law demonstrated in the video.</p>
       </div>
-      <div class="finding" style="--c:#f43f5e">
+      <div class="finding" style="--c:#c47483">
         <div class="big">7.7<small>%</small></div>
         <h4>Parameters are rarely recovered</h4>
         <p>The best model (Claude Sonnet 4.6) names <i>and</i> estimates within ±20% only 7.7% of all ground-truth parameters.</p>
       </div>
-      <div class="finding" style="--c:#a855f7">
+      <div class="finding" style="--c:#9781b5">
         <div class="big">κ 0.72 <span class="vs">vs</span> 0.20</div>
         <h4>Pixels ≠ dynamics</h4>
         <p>DINOv2 and VideoCLIP agree with each other (κ = 0.717) but barely with human judgments of physics equivalence (κ ≤ 0.205). Models match appearance and miss dynamics.</p>
       </div>
-      <div class="finding" style="--c:#8b5cf6">
+      <div class="finding" style="--c:#8079b0">
         <div class="big">50.1<small>%</small> <span class="vs">vs</span> 83.1<small>%</small></div>
         <h4>Open vs. closed code</h4>
         <p>Open-source code runs without error 50.1% of the time on average, versus 83.1% for closed models. Claude Sonnet 4.6 is the most reliable at 98.8%.</p>
@@ -169,10 +169,10 @@
 
     <h3 class="measure-title">What we measure</h3>
     <div class="cap-grid">
-      <div class="cap"><div class="cap-ico" style="--c:#ec4899">👁</div><h4>(i) Video understanding</h4><p>Extract visual features and track objects across frames.<br><span class="muted">Measured by human appearance equivalence and DINOv2 / VideoCLIP similarity.</span></p></div>
-      <div class="cap"><div class="cap-ico" style="--c:#b84fd6">∑</div><h4>(ii) Physics understanding</h4><p>Bind what it <i>sees</i> to what it <i>knows</i>: identify the governing law and estimate parameters.<br><span class="muted">Measured by law correctness vs. equivalence and parameter recovery (±20%).</span></p></div>
-      <div class="cap"><div class="cap-ico" style="--c:#a855f7">&lt;/&gt;</div><h4>(iii) Programming</h4><p>Write stable simulation code that handles boundary conditions and renders a video.<br><span class="muted">Measured by compile / run / video-save rates and CodeBLEU.</span></p></div>
-      <div class="cap"><div class="cap-ico" style="--c:#f43f5e">⟳</div><h4>End-to-end</h4><p>Does the regenerated video show the same physics as the input?<br><span class="muted">Measured by human ratings of physical plausibility and physics equivalence.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#c27896">👁</div><h4>(i) Video understanding</h4><p>Extract visual features and track objects across frames.<br><span class="muted">Measured by human appearance equivalence and DINOv2 / VideoCLIP similarity.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#9a74ae">∑</div><h4>(ii) Physics understanding</h4><p>Bind what it <i>sees</i> to what it <i>knows</i>: identify the governing law and estimate parameters.<br><span class="muted">Measured by law correctness vs. equivalence and parameter recovery (±20%).</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#9781b5">&lt;/&gt;</div><h4>(iii) Programming</h4><p>Write stable simulation code that handles boundary conditions and renders a video.<br><span class="muted">Measured by compile / run / video-save rates and CodeBLEU.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#c47483">⟳</div><h4>End-to-end</h4><p>Does the regenerated video show the same physics as the input?<br><span class="muted">Measured by human ratings of physical plausibility and physics equivalence.</span></p></div>
     </div>
     <p class="note">This is not retrieval or memorization: every sample uses randomly sampled parameters drawn from physically plausible ranges, so values must be inferred from visual dynamics. Models get the engine name and an experiment-agnostic code template, so the test measures physics understanding rather than familiarity with an engine.</p>
 
@@ -315,23 +315,23 @@
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Dataset construction</span>Expert-curated, procedurally scaled, debiased</h2>
     <div class="pipeline">
-      <div class="pl-step" style="--c:#ec4899">
+      <div class="pl-step" style="--c:#c27896">
         <div class="pl-num">1</div><h4>Ideation</h4>
         <p>4 human experts curate <b>69</b> simulation ideas. Claude Opus 4.7 and GPT-5.5 propose <b>300</b> more, and the experts keep <b>93</b> for implementability and clarity of the intended physics. That gives <b>162</b> experiments, each with a 3–4 line expert-written event description.</p>
       </div>
-      <div class="pl-step" style="--c:#b84fd6">
+      <div class="pl-step" style="--c:#9a74ae">
         <div class="pl-num">2</div><h4>Coding &amp; CoT</h4>
         <p>From the expert descriptions, Claude Opus 4.7 writes the simulation code and extracts the governing laws, equations and physical parameters into a <b>13-key</b> chain-of-thought schema.</p>
       </div>
-      <div class="pl-step" style="--c:#a855f7">
+      <div class="pl-step" style="--c:#9781b5">
         <div class="pl-num">3</div><h4>Rendering</h4>
         <p><b>Pipeline A</b> (87 exps): SciPy RK45 ODE solving (rtol 1e-9) with Matplotlib, 30 fps, 12 s. <b>Pipeline B</b> (75 exps, “Kubric”): PyBullet at 240 Hz, pyrender + trimesh PBR, 480×480. Each experiment gets ≈ 100 × <i>n</i><sub>rand</sub> samples.</p>
       </div>
-      <div class="pl-step" style="--c:#8b5cf6">
+      <div class="pl-step" style="--c:#8079b0">
         <div class="pl-num">4</div><h4>Multi-round review</h4>
         <p>2–10 rounds of human-in-the-loop correction until each simulation is physically plausible, followed by cross-review for factual mistakes.</p>
       </div>
-      <div class="pl-step" style="--c:#f43f5e">
+      <div class="pl-step" style="--c:#c47483">
         <div class="pl-num">5</div><h4>Debiasing</h4>
         <p>Three LLM rounds (Unicode → LaTeX/Python, physics fixes by GPT-5.5, comment stripping) make <b>14,700</b> substitutions with a total Levenshtein distance of <b>693.6K</b> characters. Four experts then verify the result.</p>
       </div>
