@@ -1,0 +1,9 @@
+# data and outputs (download / generate locally)
+benchmarking_data/
+inference_outputs/
+eval_outputs/
+# secrets
+.env
+# python
+__pycache__/
+*.pyc

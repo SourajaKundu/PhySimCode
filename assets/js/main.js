@@ -1,7 +1,7 @@
 /* PhySimCode project page */
 (() => {
   // Fill these in when available; the buttons enable themselves automatically.
-  const LINKS = { paper: '', code: '' };
+  const LINKS = { paper: '', code: 'https://github.com/SourajaKundu/PhySimCode' };
 
   const P = window.PAPER;
   const $ = (s, el = document) => el.querySelector(s);

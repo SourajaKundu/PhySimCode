@@ -1,0 +1,51 @@
+# Eval-time dependencies — used to check whether model-generated code compiles
+# (ast.parse) and runs end-to-end (executes + writes video.mp4).
+#
+# Usage:
+#   conda create -n phys_eval python=3.10 -y
+#   conda activate phys_eval
+#   pip install -r eval/requirements_eval.txt
+#
+#   # Patch 1: the pybullet wheel for cp310 ships pybullet_data/ (URDF data files)
+#   #          but no __init__.py with getDataPath(). Add it:
+#   python -c "import pybullet_data, os, pathlib; \
+#       p = pathlib.Path(pybullet_data.__path__[0]) / '__init__.py'; \
+#       p.write_text('import os\ndef getDataPath():\n    return os.path.join(os.path.dirname(__file__))\n') if not p.exists() else None"
+#
+#   # Patch 2: same wheel ships plane_implicit.urdf referencing a missing
+#   #          plane100.obj, AND no working plane.urdf. Write a minimal
+#   #          plane.urdf using the available plane.obj:
+#   python -c "import pybullet_data, os, pathlib; \
+#       p = pathlib.Path(pybullet_data.__path__[0]) / 'plane.urdf'; \
+#       p.write_text('<?xml version=\"1.0\"?>\n<robot name=\"plane\"><link name=\"planeLink\"><contact><lateral_friction value=\"0.9\"/></contact><inertial><mass value=\"0\"/><inertia ixx=\"0\" ixy=\"0\" ixz=\"0\" iyy=\"0\" iyz=\"0\" izz=\"0\"/></inertial><visual><geometry><mesh filename=\"plane.obj\" scale=\"1 1 1\"/></geometry><material name=\"white\"><color rgba=\"1 1 1 1\"/></material></visual><collision><geometry><plane normal=\"0 0 1\"/></geometry></collision></link></robot>')"
+# Core numerics
+numpy>=1.26
+scipy>=1.13
+# scipy-engine rendering
+matplotlib>=3.8
+# kubric-engine physics + rendering (pure Python, no Docker)
+pybullet==3.2.7
+pyrender==0.1.45
+trimesh>=4.0
+imageio[ffmpeg]>=2.34
+# PyOpenGL: pyrender pins 3.1.0, which fails on headless EGL. After installing,
+#   pip install PyOpenGL==3.1.7 --no-deps
+# Sandbox helpers used by the evaluator script (timeouts, resource limits)
+psutil>=5.9
+# LLM judges (law correctness / law equivalence)
+openai>=1.40          # GPT-5-Nano; Grok-4.1-Fast via xAI's OpenAI-compatible API
+google-genai>=1.0     # Gemini-2.5-Flash
+python-dotenv>=1.0    # reads API keys from a .env file at the repo root
+# Chain-of-thought recovery
+json5>=0.9
+# CodeBLEU (the paper uses codebleu==0.7.0)
+codebleu==0.7.0
+tree-sitter>=0.22,<0.23
+tree-sitter-python>=0.21,<0.22
+# Video similarity (DINOv2, X-CLIP)
+torch>=2.1
+transformers>=4.40
+pillow>=10.0
+# Inter-judge agreement
+pandas>=2.0
+scikit-learn>=1.3
