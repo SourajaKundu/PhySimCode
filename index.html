@@ -194,9 +194,11 @@
 
     <div class="tab-panel" data-panel="code">
       <div class="chart-head">
-        <p>Share of the 2,430 inputs surviving each stage: CoT extracted → code extracted → compiles → runs without error → saves the video. Almost everything compiles; open-source code often crashes at runtime. Gemini's long thinking trace truncates the code in &gt;30% of samples.</p>
+        <p>Of the 2,430 inputs, how often each model's generated code <b>compiles</b> and how often it also <b>runs and saves a video</b>. Models are ranked by the share that produces a video. The gap between the two shades is code that compiles but fails at run time.</p>
+        <div class="cb-legend"><span><i class="cb-key dark"></i>runs &amp; saves video</span><span><i class="cb-key light"></i>compiles only</span></div>
       </div>
-      <div class="chart-box tall"><canvas id="chart-code"></canvas></div>
+      <div class="code-bars" id="code-bars"></div>
+      <p class="note">Open-source models ran with a 32K-token context window (49K for Pixtral) that has to hold the video frames, the prompt and the answer, which accounts for much of their lower success rate.</p>
     </div>
 
     <div class="tab-panel" data-panel="param">

@@ -338,21 +338,21 @@
     simChart.update();
   });
 
-  lazy('#chart-code', c => new Chart(c, {
-    type: 'line',
-    data: {
-      labels: ['CoT extracted', 'Code extracted', 'Compiles', 'Runs w/o error', 'Saves video'],
-      datasets: MAIN.map(m => ({
-        label: M(m).name, data: P.T5[m].slice(1, 6), borderColor: gcol(m), backgroundColor: gcol(m),
-        borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 7, tension: .25, borderDash: M(m).group === 'open' ? [6, 4] : [],
-      })),
-    },
-    options: {
-      interaction: { mode: 'nearest', intersect: false },
-      scales: { y: { min: 30, max: 100, grid, title: { display: true, text: '% of 2,430 inputs' } }, x: { grid } },
-      plugins: { legend: { position: 'right', labels: { usePointStyle: true, generateLabels: ch => Chart.defaults.plugins.legend.labels.generateLabels(ch).map((l, i) => ({ ...l, pointStyle: logoImage(MAIN[i], 16) })) }, onHover: (e, item, legend) => { const ch = legend.chart; ch.data.datasets.forEach((d, i) => d.borderWidth = i === item.datasetIndex ? 5 : 1.5); ch.update('none'); }, onLeave: (e, item, legend) => { legend.chart.data.datasets.forEach(d => d.borderWidth = 2.5); legend.chart.update('none'); } }, tooltip: { callbacks: { label: x => ` ${x.dataset.label}: ${x.parsed.y}%` } } },
-    },
-  }));
+  // code pipeline: one ranked bar per model (light = compiles, dark = runs and saves a video)
+  (() => {
+    const box = $('#code-bars');
+    const rows = [...MAIN].sort((a, b) => P.T5[b][5] - P.T5[a][5]);
+    box.innerHTML = rows.map((m, i) => {
+      const [, cot, code, comp, noerr, vid] = P.T5[m];
+      const g = M(m).group;
+      return `<div class="cb-row ${g}" title="CoT extracted ${cot}% · code extracted ${code}% · compiles ${comp}% · runs without error ${noerr}% · saves video ${vid}%">
+        <span class="cb-rank">${i + 1}</span>
+        <span class="cb-name">${logoTag(m)}${esc(M(m).name)}</span>
+        <span class="cb-track"><span class="cb-light" style="width:${comp}%"></span><span class="cb-dark" style="width:${vid}%"></span></span>
+        <span class="cb-val"><b>${vid.toFixed(1)}%</b><small>compiles ${comp.toFixed(1)}%</small></span>
+      </div>`;
+    }).join('') + `<div class="cb-axis"><span></span><span></span><span class="cb-ticks"><i>0</i><i>25</i><i>50</i><i>75</i><i>100%</i></span><span></span></div>`;
+  })();
 
   const labelPlugin = {
     id: 'pointLabels',
