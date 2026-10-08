@@ -128,7 +128,7 @@
     const dpIn = $('#dp-in'), dpMid = $('#dp-mid'), dpOut = $('#dp-out');
     const vIn = $('#demo-in'), vGen = $('#demo-gen'), genWrap = $('.gen-wrap', dpOut);
     const edCot = $('#ed-cot code'), edCode = $('#ed-code code'), edTerm = $('#ed-term');
-    const mllm = $('#mllm'), score = $('#scorecard'), finale = $('#demo-finale'), flyers = $('#flyer-layer');
+    const mllm = $('#mllm'), score = $('#scorecard'), flyers = $('#flyer-layer');
     const pe = D.param_eval, gtNames = Object.keys(D.gt_params || {});
     const okSet = new Set((pe.matched || []).filter(m => m.within_20pct).map(m => m.gt_name));
     const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
@@ -138,17 +138,6 @@
     const cotText = JSON.stringify({ simulation: pc.simulation, physical_law: pc.physical_law, parameters: slimParams }, null, 2);
     const codeText = D.pred_code || '';
     const termText = `$ python simulation.py\n  integrating dynamics (6 balls, walls, restitution) …\n  rendering frames → video.mp4 …\n✓ done in ${(3.1).toFixed(1)} s · video.mp4 written`;
-    const FIN_K = ['multi_physics_arena', 'domino_chain', 'tumbling_dice', 'trebuchet_throw'];
-    const FIN_S = ['billiards_break', 'three_gear_chain', 'rolling_race_hoop_vs_disk_vs_sphere', 'slab_springs_block_drop'];
-    const byExp = Object.fromEntries(gallery.map(x => [x.experiment, x]));
-    FIN_K.flatMap((k, i) => [k, FIN_S[i]]).forEach((exp, i) => {
-      const x = byExp[exp]; if (!x) return;
-      const it = h('div', { class: 'fin-item', style: { transitionDelay: i * 90 + 'ms' }, onclick: () => openSample(x) });
-      const v = h('video', { muted: '', loop: '', playsinline: '', preload: 'none', poster: `videos/posters/${exp}.jpg` }); v.muted = true; v.dataset.src = `videos/gallery/${exp}.mp4`;
-      it.append(v, h('span', { class: x.engine === 'scipy' ? 'k2' : 'k3' }, x.engine === 'scipy' ? '2D · SciPy' : '3D · PyBullet'));
-      finale.append(it);
-    });
-
     // virtual clock: everything is timed against `vt`, which only advances while playing
     let vt = 0, last = null, playing = false, runId = 0, cur = 0, stepStart = 0, started = false, inView = false;
     const waiters = new Set(), frameFns = new Set();
@@ -170,11 +159,12 @@
       waiters.add(w);
     });
     const typeInto = (el, text, ms, lang, id) => new Promise((resolve, reject) => {
-      const t0 = vt; let lastN = -1;
+      const t0 = vt; let lastN = -1, lastDraw = -1e9;
       const f = () => {
         if (id !== runId) { frameFns.delete(f); return reject(CANCEL); }
         const n = Math.min(text.length, Math.floor(text.length * (vt - t0) / ms));
-        if (n !== lastN) {
+        if (n !== lastN && (n >= text.length || vt - lastDraw >= 33)) {
+          lastDraw = vt;
           lastN = n;
           el.innerHTML = (lang ? hl(text.slice(0, n), lang) : esc(text.slice(0, n))) + (n < text.length ? '<span class="caret"></span>' : '');
           el.parentElement.scrollTop = el.parentElement.scrollHeight;
@@ -213,20 +203,15 @@
         setTimeout(() => im.remove(), 2600 + i * 200);
       }
     };
-    const finaleOn = on => {
-      finale.classList.toggle('on', on);
-      $$('video', finale).forEach(v => { if (on) { if (!v.src) v.src = v.dataset.src; v.play().catch(() => {}); } else v.pause(); });
-    };
-
     const STEPS = [
-      { dur: 4200, cap: 'Input: just a video', sub: 'plus the engine name (here: SciPy). Nothing else.',
-        run: async (inst, id) => { focus(dpIn); dpMid.classList.add('dim'); dpOut.classList.add('dim'); if (!inst) { restartVideos(); } } },
+      { dur: 4200, cap: 'Input: just a video', sub: '',
+        run: async (inst, id) => { focus(dpIn); dpMid.classList.add('hide'); dpOut.classList.add('hide'); if (!inst) { restartVideos(); } } },
       { dur: 3600, cap: 'The MLLM watches the frames', sub: '',
-        run: async (inst, id) => { dpMid.classList.remove('dim'); focus(dpMid); mllm.classList.add('busy'); setTab('cot'); if (!inst) fly(); } },
-      { dur: 7600, cap: 'It infers the physics', sub: 'the governing law and every parameter value, as JSON',
-        run: async (inst, id) => { setTab('cot'); if (inst) edCot.innerHTML = hl(cotText, 'json'); else await typeInto(edCot, cotText, 6600, 'json', id); } },
-      { dur: 7200, cap: 'It writes the simulation from scratch', sub: 'self-contained Python: NumPy, SciPy, Matplotlib',
-        run: async (inst, id) => { setTab('code'); if (inst) edCode.innerHTML = hl(codeText, 'python'); else await typeInto(edCode, codeText, 6400, 'python', id); } },
+        run: async (inst, id) => { dpMid.classList.remove('hide'); dpOut.classList.remove('hide'); dpOut.classList.add('dim'); focus(dpMid); mllm.classList.add('busy'); setTab('cot'); if (!inst) fly(); } },
+      { dur: 4300, cap: 'It infers the physics', sub: 'the governing law and every parameter value, as JSON',
+        run: async (inst, id) => { setTab('cot'); if (inst) edCot.innerHTML = hl(cotText, 'json'); else await typeInto(edCot, cotText, 3000, 'json', id); } },
+      { dur: 6000, cap: 'It writes the simulation from scratch', sub: 'self-contained Python: NumPy, SciPy, Matplotlib',
+        run: async (inst, id) => { setTab('code'); if (inst) edCode.innerHTML = hl(codeText, 'python'); else await typeInto(edCode, codeText, 5000, 'python', id); } },
       { dur: 4600, cap: 'We run the code', sub: 'it renders a brand-new video',
         run: async (inst, id) => {
           setTab('term'); mllm.classList.remove('busy');
@@ -235,18 +220,16 @@
         } },
       { dur: 6200, cap: 'We score it against the input', sub: 'law · parameters · video · code',
         run: async (inst, id) => { focus(dpOut); await showCards(inst, id); } },
-      { dur: 6500, cap: 'Same task: 162 phenomena, 2D and 3D', sub: '14 MLLMs evaluated. Scroll down for the results.',
-        run: async (inst, id) => { focus(null); finaleOn(true); } },
     ];
     const bars = $('#demo-steps');
     STEPS.forEach((s, i) => { const b = h('button', { class: 'dstep', style: { '--w': s.dur }, title: s.cap, 'aria-label': `Step ${i + 1}: ${s.cap}` }, '<span></span>'); b.onclick = () => go(i); bars.append(b); });
 
     const reset = () => {
       waiters.clear(); frameFns.clear(); flyers.innerHTML = '';
-      [dpIn, dpMid, dpOut].forEach(x => x.classList.remove('dim', 'focus'));
+      [dpIn, dpMid, dpOut].forEach(x => x.classList.remove('dim', 'focus', 'hide'));
       mllm.classList.remove('busy'); setTab('cot');
       edCot.innerHTML = ''; edCode.innerHTML = ''; edTerm.textContent = '';
-      genWrap.classList.remove('on'); score.innerHTML = ''; finaleOn(false);
+      genWrap.classList.remove('on'); score.innerHTML = '';
     };
     const setCaption = i => {
       cap.innerHTML = `<span class="num">${i + 1}</span>${esc(STEPS[i].cap)}${STEPS[i].sub ? `<span class="sub">${esc(STEPS[i].sub)}</span>` : ''}`;
@@ -271,7 +254,6 @@
       playing = p;
       $('#demo-pause').textContent = p ? '❚❚' : '▶';
       [vIn, vGen].forEach(v => (p && inView ? v.play().catch(() => {}) : v.pause()));
-      $$('video', finale).forEach(v => (p && inView && finale.classList.contains('on') ? v.play().catch(() => {}) : v.pause()));
     }
     $('#demo-pause').onclick = () => { if (cur >= STEPS.length) return go(0); setPlaying(!playing); userPaused = !playing; };
     $('#demo-replay').onclick = () => { userPaused = false; go(0); };
@@ -426,29 +408,6 @@
     });
     render();
   })();
-
-  // kappa
-  const KNOTES = {
-    physics: 'Patch-wise metrics agree strongly with each other but barely with humans judging whether the regenerated video shows the same physics.',
-    appearance: 'Humans rating visual appearance agree more with patch-wise metrics, because both focus on pixel-level match rather than physics.',
-    judges: 'Pairwise agreement between the three LLM judges never exceeds 0.85, so the panel is not redundant. 86% of judgments agree within 1 Likert point.',
-  };
-  const renderKappa = k => {
-    const box = $('#kappa-grid'); box.innerHTML = '';
-    for (const g of ['closed', 'open']) {
-      const card = h('div', { class: 'kcard' }, `<h5><span class="badge ${g}">${g === 'closed' ? 'Closed-source' : 'Open-source'}</span> models, pooled</h5>`);
-      for (const [pair, v] of Object.entries(P.KAPPA[k][g])) {
-        const col = v > .6 ? '#8c7ae6' : v > .3 ? '#4a9be0' : '#e8707a';
-        const row = h('div', { class: 'krow' }, `<span>${pair}</span><div class="kbar"><span style="width:0;background:${col}"></span></div><b>${v.toFixed(3)}</b>`);
-        card.append(row);
-        requestAnimationFrame(() => requestAnimationFrame(() => { $('.kbar span', row).style.width = Math.max(1, v * 100) + '%'; }));
-      }
-      box.append(card);
-    }
-    $('#kappa-note').textContent = KNOTES[k];
-  };
-  renderKappa('physics');
-  segHandler('#kappa-sub', b => renderKappa(b.dataset.k));
 
   // ---------- frontier charts ----------
   const ALL14 = [...P.FRONTIER, ...MAIN];
@@ -722,79 +681,12 @@
     },
   })));
 
-  // ---------- construction charts ----------
-  lazy('#chart-laws-dist', c => new Chart(c, {
-    type: 'bar',
-    data: { labels: P.LAWS.map(x => x[0]), datasets: [{ data: P.LAWS.map(x => x[1]), backgroundColor: ['#e8707a', '#ec7f6e', '#f08c3c', '#d9b310', '#74b84a', '#38b2a0', '#4a9be0', '#6d8ae6', '#8c7ae6', '#d66fb0'], borderRadius: 5 }] },
-    options: { indexAxis: 'y', scales: { x: { grid, max: 170, title: { display: true, text: 'number of experiments' } }, y: { grid: { display: false } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: x => ` ${x.parsed.x} of 162 experiments` } } } },
-  }));
-  galleryP.then(g => lazy('#chart-per-exp', c => {
-    const s = [...g].sort((a, b) => b.samples - a.samples);
-    return new Chart(c, {
-      type: 'bar',
-      data: { labels: s.map(x => pretty(x.experiment)), datasets: [{ data: s.map(x => x.samples), backgroundColor: s.map(x => domColor(x.domain)), borderRadius: 2, barPercentage: 1, categoryPercentage: .85 }] },
-      options: {
-        scales: { x: { display: false }, y: { grid, type: 'logarithmic', min: 150, max: 6000, title: { display: true, text: 'samples (log)' }, ticks: { callback: v => [200, 500, 1000, 2000, 5000].includes(v) ? v.toLocaleString() : '' } } },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { title: x => x[0].label, label: x => { const e = s[x.dataIndex]; return [` ${e.samples.toLocaleString()} samples · n_rand = ${e.n_rand}`, ` ${e.domain} · ${e.engine}`, ' click to open']; } } } },
-        onClick: (e, els) => { if (els.length) openSample(s[els[0].index]); },
-        onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
-      },
-    });
-  }));
-  const SCHEMA = [
-    ['simulation', 'Experiment-type identifier.', 1], ['category', 'Physics domain (e.g. articulated, rigid-body collision).'],
-    ['physical_observation', 'Natural-language description of the visual dynamics, with parameter values.', 1],
-    ['physical_law', 'Law name, statement, and governing equation in LaTeX.', 1],
-    ['modeling_assumptions', 'Idealisations baked in (point masses, frictionless surfaces, …).'],
-    ['ode_system', 'State variables and governing ODE in both LaTeX and Python form.'],
-    ['event_schedule', 'Discrete events for collisions / contacts (when applicable).'],
-    ['derivation_steps', 'Ordered derivation from first principles to the implemented update.'],
-    ['physical_constants', 'Computed quantities (moments of inertia, equilibrium positions, …).'],
-    ['numerical_method', 'Solver, tolerances, and closed-form availability.'],
-    ['code_validation', 'Analytical checks, limiting behaviours, and plausibility flags.'],
-    ['expected_behavior', 'Qualitative predictions about the resulting trajectory.'],
-    ['parameters', 'All sampled values with units and human-readable descriptions.', 1],
-  ];
-  $('#schema-grid').innerHTML = SCHEMA.map(([k, d, req]) => `<div class="schema"><code>${k}</code>${req ? '<span class="req" title="also required in model outputs">model output</span>' : ''}<p>${d}</p></div>`).join('');
-
   // prior table
   (() => {
     const hd = ['Benchmark', 'Video', 'Text', 'CoT', 'Code', 'Physics laws', 'Engine agnostic', '2D + 3D', '# Exp.', 'Size'];
     $('#prior-table').innerHTML = '<thead><tr>' + hd.map(x => `<th>${x}</th>`).join('') + '</tr></thead><tbody>' +
       P.PRIOR.map(r => `<tr class="${r[0].includes('Ours') ? 'ours' : ''}"><td>${r[0]}</td>` + r.slice(1, 8).map(v => v ? '<td class="y">✓</td>' : '<td class="n">✗</td>').join('') + `<td>${r[8]}</td><td>${r[9]}</td></tr>`).join('') + '</tbody>';
   })();
-
-  // ---------- analysis ----------
-  (() => {
-    const box = $('#chart-bias').parentElement;
-    box.style.height = 'auto';
-    let html = `<table class="ptable"><thead><tr><th>Metric</th><th>Claude Sonnet 4.6</th><th>GPT-5 Mini</th></tr></thead><tbody>`;
-    for (const [name, c, g, u] of P.T10) {
-      const mx = Math.max(Math.abs(c), Math.abs(g), 1e-9);
-      const bar = (v, col) => `<div style="display:flex;align-items:center;gap:.5rem"><div style="flex:1;height:10px;background:#f0f1f7;border-radius:99px;position:relative"><span style="position:absolute;top:0;bottom:0;${v >= 0 ? 'left:50%' : 'right:50%'};width:${Math.abs(v) / mx * 50}%;background:${col};border-radius:99px"></span><span style="position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#aab"></span></div><code style="min-width:62px;text-align:right">${v >= 0 ? '+' : ''}${v.toFixed(name === 'CodeBLEU' ? 3 : 2)}${u ? ' ' + u : ''}</code></div>`;
-      html += `<tr><td>${name}</td><td>${bar(c, '#e8590c')}</td><td>${bar(g, '#10a37f')}</td></tr>`;
-    }
-    html += `<tr><td colspan="3" class="muted" style="font-style:italic">If the benchmark favored Claude: Claude large negative, GPT large positive. Observed: neither.</td></tr></tbody></table>`;
-    box.innerHTML = html;
-  })();
-  lazy('#chart-rho', c => new Chart(c, {
-    type: 'bar',
-    data: { labels: P.T13.map(x => x[0]), datasets: [{ data: P.T13.map(x => x[1]), backgroundColor: P.T13.map(x => (x[2] === '~0' || +x[2] < .05) ? '#8c7ae6' : '#cfc8f3'), borderRadius: 4 }] },
-    options: { indexAxis: 'y', scales: { x: { min: 0, max: 1, grid, title: { display: true, text: "Spearman's ρ (dark: p < 0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 10.5 } } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: x => ` ρ = ${x.parsed.x.toFixed(3)}, p = ${P.T13[x.dataIndex][2]}` } } } },
-  }));
-  let framesChart;
-  const framesData = k => ({
-    datasets: [['qwen', 'Qwen3-VL-30B', '#7048e8'], ['internvl', 'InternVL3.5-30B', '#1c7ed6']].map(([key, label, col]) => ({
-      label, borderColor: col, backgroundColor: col, tension: .3, borderWidth: 2.5,
-      data: P.T20.frames[key].map((f, i) => ({ x: f, y: P.T20[k][key][i] })),
-      pointRadius: P.T20.frames[key].map(f => f === P.T20.paper[key] ? 8 : 4), pointStyle: P.T20.frames[key].map(f => f === P.T20.paper[key] ? 'rectRot' : 'circle'),
-    })),
-  });
-  lazy('#chart-frames', c => (framesChart = new Chart(c, {
-    type: 'line', data: framesData('param'),
-    options: { scales: { x: { type: 'linear', min: 0, max: 85, grid, title: { display: true, text: 'input frames (◆ = budget used in paper)' } }, y: { grid } } },
-  })));
-  segHandler('#frames-sub', b => { if (framesChart) { framesChart.data = framesData(b.dataset.k); framesChart.update(); } });
 
   // ---------- copy buttons ----------
   document.addEventListener('click', e => {

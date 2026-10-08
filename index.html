@@ -26,8 +26,6 @@
     <a href="#results">Results</a>
     <a href="#frontier">Frontier models</a>
     <a href="#dataset">Dataset explorer</a>
-    <a href="#construction">Construction</a>
-    <a href="#analysis">Analysis</a>
     <a href="#bibtex">BibTeX</a>
   </div>
 </nav>
@@ -67,7 +65,7 @@
     </div>
     <div class="tldr">
       <span class="tldr-tag">TL;DR</span>
-      <p class="tldr-q">Can a multimodal LLM watch a <span class="hl-in">2D or 3D physics video</span>, work out its <span class="hl-mid">laws and parameter values</span>, and write <span class="hl-out">code from scratch</span> that regenerates it?</p>
+      <p class="tldr-q">Can a multimodal LLM watch a <span class="hl-in">2D or 3D physics simulation</span>, work out the involved <span class="hl-mid">physics laws and parameter values</span>, and write <span class="hl-out">code from scratch</span> that regenerates it?</p>
       <p class="tagline"><b>PhySimCode</b> is a benchmark of <b>160.6K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
     </div>
     <h2 class="sec-title task-title"><span class="kicker">The task</span>From pixels to physics to programs</h2>
@@ -96,14 +94,10 @@
       <div class="demo-caption" id="demo-caption"></div>
       <div class="demo-stage" id="demo-stage">
         <div class="dp dp-in" id="dp-in">
-          <div class="dp-label"><span class="dot" style="background:#c27896"></span>Input video <small>balls in basin · SciPy 2D</small></div>
           <video id="demo-in" muted loop playsinline preload="auto" poster="videos/demo/cover.jpg" src="videos/demo/input.mp4"></video>
-          <div class="frames-label">frames sent to the model (sampled at 10 fps)</div>
-          <div class="frames" id="demo-frames"><img src="videos/demo/frame0.jpg" alt=""><img src="videos/demo/frame1.jpg" alt=""><img src="videos/demo/frame2.jpg" alt=""><img src="videos/demo/frame3.jpg" alt=""><img src="videos/demo/frame4.jpg" alt=""><img src="videos/demo/frame5.jpg" alt=""></div>
-          <div class="frames-label">engine hint: <code>scipy</code></div>
         </div>
         <div class="dp dp-mid" id="dp-mid">
-          <div class="mllm" id="mllm"><span class="mllm-dot"></span>MLLM <small>Gemini 2.5 Pro</small></div>
+          <div class="mllm" id="mllm"><span class="mllm-dot"></span>MLLM</div>
           <div class="editor">
             <div class="ed-tabs"><span class="ed-tab" data-t="cot">cot.json</span><span class="ed-tab" data-t="code">simulation.py</span><span class="ed-tab" data-t="term">terminal</span></div>
             <pre class="ed-body" id="ed-cot"><code></code></pre>
@@ -116,7 +110,6 @@
           <div class="gen-wrap"><video id="demo-gen" muted loop playsinline preload="auto" src="videos/demo/generated.mp4"></video><div class="gen-empty" id="gen-empty">waiting for code…</div></div>
           <div class="scorecard" id="scorecard"></div>
         </div>
-        <div class="demo-finale" id="demo-finale"></div>
         <div class="flyer-layer" id="flyer-layer"></div>
       </div>
     </div>
@@ -226,15 +219,6 @@
       </div>
       <p class="note">Click a column header to sort. Darker cells are better within a column. Param. Acc. = end-to-end parameter recovery within ±20%.</p>
     </div>
-
-    <div class="kappa-wrap">
-      <h3>Who agrees with whom? <span class="muted">(weighted Cohen's κ)</span></h3>
-      <div class="seg" id="kappa-sub">
-        <button class="active" data-k="physics">Human physics-eq. vs metrics</button><button data-k="appearance">Human appearance vs metrics</button><button data-k="judges">LLM judge panel</button>
-      </div>
-      <div class="kappa-grid" id="kappa-grid"></div>
-      <p class="note" id="kappa-note"></p>
-    </div>
   </div>
 </section>
 
@@ -311,115 +295,11 @@
   </div>
 </section>
 
-<section class="section" id="construction">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="kicker">Dataset construction</span>Expert-curated, procedurally scaled, debiased</h2>
-    <div class="pipeline">
-      <div class="pl-step" style="--c:#c27896">
-        <div class="pl-num">1</div><h4>Ideation</h4>
-        <p>4 human experts curate <b>69</b> simulation ideas. Claude Opus 4.7 and GPT-5.5 propose <b>300</b> more, and the experts keep <b>93</b> for implementability and clarity of the intended physics. That gives <b>162</b> experiments, each with a 3–4 line expert-written event description.</p>
-      </div>
-      <div class="pl-step" style="--c:#9a74ae">
-        <div class="pl-num">2</div><h4>Coding &amp; CoT</h4>
-        <p>From the expert descriptions, Claude Opus 4.7 writes the simulation code and extracts the governing laws, equations and physical parameters into a <b>13-key</b> chain-of-thought schema.</p>
-      </div>
-      <div class="pl-step" style="--c:#9781b5">
-        <div class="pl-num">3</div><h4>Rendering</h4>
-        <p><b>Pipeline A</b> (87 exps): SciPy RK45 ODE solving (rtol 1e-9) with Matplotlib, 30 fps, 12 s. <b>Pipeline B</b> (75 exps, “Kubric”): PyBullet at 240 Hz, pyrender + trimesh PBR, 480×480. Each experiment gets ≈ 100 × <i>n</i><sub>rand</sub> samples.</p>
-      </div>
-      <div class="pl-step" style="--c:#8079b0">
-        <div class="pl-num">4</div><h4>Multi-round review</h4>
-        <p>2–10 rounds of human-in-the-loop correction until each simulation is physically plausible, followed by cross-review for factual mistakes.</p>
-      </div>
-      <div class="pl-step" style="--c:#c47483">
-        <div class="pl-num">5</div><h4>Debiasing</h4>
-        <p>Three LLM rounds (Unicode → LaTeX/Python, physics fixes by GPT-5.5, comment stripping) make <b>14,700</b> substitutions with a total Levenshtein distance of <b>693.6K</b> characters. Four experts then verify the result.</p>
-      </div>
-    </div>
-
-    <div class="sample-anatomy">
-      <div class="sa-item"><span>🎬</span><b>Rendered video</b><small>SciPy 2D up to 1560×1080 · PyBullet 3D 480×480</small></div>
-      <div class="sa-item"><span>🐍</span><b>Simulation code</b><small>median 121 lines · fully runnable</small></div>
-      <div class="sa-item"><span>🧠</span><b>Chain-of-thought</b><small>median 4 derivation steps · 3 LaTeX equations</small></div>
-      <div class="sa-item"><span>🔢</span><b>Parameters</b><small>median 9 (up to 21) typed values</small></div>
-    </div>
-
-    <div class="two-col">
-      <div>
-        <h3>Physical laws invoked <span class="muted">(multi-label)</span></h3>
-        <div class="chart-box"><canvas id="chart-laws-dist"></canvas></div>
-      </div>
-      <div>
-        <h3>Two complementary pipelines</h3>
-        <table class="rtable compact">
-          <thead><tr><th></th><th>SciPy (2D)</th><th>PyBullet “Kubric” (3D)</th></tr></thead>
-          <tbody>
-            <tr><td>Experiments</td><td>87</td><td>75</td></tr>
-            <tr><td>Samples</td><td>64,800</td><td>95,855</td></tr>
-            <tr><td>Samples / exp. (median)</td><td>600</td><td>900</td></tr>
-            <tr><td>Resolution</td><td>480×360 – 1560×1080</td><td>480×480</td></tr>
-            <tr><td>Duration (median)</td><td>12.0 s</td><td>5.0 s</td></tr>
-            <tr><td>CoT length (median)</td><td>452 words</td><td>428 words</td></tr>
-            <tr><td>Code length (median)</td><td>119 lines</td><td>156 lines</td></tr>
-            <tr><td>Distinct named laws</td><td>86</td><td>68</td></tr>
-          </tbody>
-        </table>
-        <p class="note">Total on disk: 51.7 GB, with 1,112,171 derivation steps and 588,023 LaTeX equations.</p>
-      </div>
-    </div>
-
-    <h3>Samples per experiment <span class="muted">(colored by domain, sorted)</span></h3>
-    <div class="chart-box wide"><canvas id="chart-per-exp"></canvas></div>
-
-    <h3>Chain-of-thought schema</h3>
-    <div class="schema-grid" id="schema-grid"></div>
-  </div>
-</section>
-
-<section class="section alt" id="compare">
+<section class="section" id="compare">
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Positioning</span>How PhySimCode differs</h2>
     <p class="sec-sub">Prior work splits into two lines that have not met. Property estimation from video recovers a handful of latent values but never a program. Physics code generation produces executable simulations but is text-conditioned and single-engine. PhySimCode closes the loop: <b>video → laws + parameters + runnable code → regenerated video</b>, scored against the input.</p>
     <div class="table-scroll"><table class="rtable prior" id="prior-table"></table></div>
-  </div>
-</section>
-
-<section class="section" id="analysis">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="kicker">Further analysis</span>Is the benchmark fair and robust?</h2>
-    <div class="analysis-grid">
-      <div class="acard">
-        <h4>No authorship bias toward Claude</h4>
-        <p>The ground truth was first written by Claude. We rebuilt a matched 75-sample subset entirely with GPT-5.5 and computed difference-in-differences <b>bias scores</b> against six neutral models. If the benchmark favored Claude, Claude's scores would be strongly negative and GPT's strongly positive. Neither happens.</p>
-        <div class="chart-box"><canvas id="chart-bias"></canvas></div>
-      </div>
-      <div class="acard">
-        <h4>Rankings agree across ground-truth authors</h4>
-        <p>Spearman ρ between model rankings on the Claude-authored and GPT-authored arms is positive on all 13 metrics (mean <b>+0.775</b>).</p>
-        <div class="chart-box"><canvas id="chart-rho"></canvas></div>
-      </div>
-      <div class="acard">
-        <h4>More frames ≠ better physics</h4>
-        <p>With more frames, models name more of the right parameters but do not estimate them better. Rankings hold at every frame budget. The bottleneck is quantitative physical inference, not perception bandwidth.</p>
-        <div class="seg small" id="frames-sub"><button class="active" data-k="param">Param. acc. %</button><button data-k="recall">Naming recall</button><button data-k="value">Value acc.</button><button data-k="noerr">No errors %</button></div>
-        <div class="chart-box"><canvas id="chart-frames"></canvas></div>
-      </div>
-      <div class="acard">
-        <h4>A single ±20% tolerance is justified</h4>
-        <p>We perturbed 108 parameters across 15 experiments by ±10% (1,080 re-renders). Normalized visual sensitivity is remarkably uniform: median <b>0.98</b>, IQR <b>[0.93, 1.05]</b>, and only 7 of 108 fall outside [0.6, 1.5]. No parameter is unobservable (min 0.48).</p>
-        <div class="sens">
-          <div class="sens-bar"><span class="sens-range" style="left:0%;width:100%"></span><span class="sens-iqr"></span><span class="sens-med"></span></div>
-          <div class="sens-ticks"><span>0.48</span><span>0.93</span><span>0.98</span><span>1.05</span><span>2.12</span></div>
-        </div>
-        <h4 style="margin-top:1.4rem">Statistically supported rankings</h4>
-        <p>With 15 i.i.d. samples per experiment across 162 experiments, the per-model aggregate standard error is ≤ 0.010, i.e. a <b>95% CI of ±2%</b> on every reported metric. The 2,430-sample subset supports the rankings at roughly 66× lower cost than the full corpus.</p>
-      </div>
-    </div>
-
-    <div class="limits">
-      <h4>Limitations &amp; real-world transfer</h4>
-      <p>Rigid-body dynamics dominate the benchmark, and the videos are simulator-generated. These are the <i>easy</i> case, with no sensor noise, occlusion or lighting changes, and models still fail. Reporting failure without nuisance factors isolates the cause to MLLM capability. It is also the only setting where ground-truth mass, stiffness or restitution is known, so the ±20% parameter-recovery metric can be defined. MPM-based engines such as Genesis would naturally extend the benchmark to fluids and deformables.</p>
-    </div>
   </div>
 </section>
 

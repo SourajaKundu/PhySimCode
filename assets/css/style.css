@@ -518,3 +518,8 @@ body { word-spacing: .07em; letter-spacing: .003em; }
 .sec-title, .title, .tldr-q, .demo-caption, h3, h4 { word-spacing: normal; }
 .measure-title { margin-bottom: .9rem; }
 .measure-title + .cap-grid { margin-top: 0; }
+.dp.hide { opacity: 0; visibility: hidden; }
+.demo-stage { height: 540px; }
+.dp-in { justify-content: center; }
+@media (max-width: 900px) { .demo-stage { height: auto; } }
+.dp-in { align-self: center; }
