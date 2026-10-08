@@ -118,7 +118,7 @@ h4 { margin: .2rem 0 .5rem; font-size: 1.05rem; }
 .cap-ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--c); margin-bottom: .7rem; font-size: 1rem; }
 
 /* findings */
-.finding-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; }
+.finding-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; }
 .finding { border-radius: var(--radius); padding: 1.4rem; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); position: relative; overflow: hidden; }
 .finding::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: var(--c); }
 .finding .big { font-family: var(--display); font-size: 2rem; font-weight: 700; color: var(--c); line-height: 1.1; margin-bottom: .6rem; }
@@ -338,7 +338,8 @@ h4 { margin: .2rem 0 .5rem; font-size: 1.05rem; }
 /* responsive */
 @media (max-width: 1050px) {
   .stats-grid { grid-template-columns: repeat(3, 1fr); row-gap: 1.6rem; }
-  .finding-grid, .cap-grid { grid-template-columns: repeat(2, 1fr); }
+  .cap-grid { grid-template-columns: repeat(2, 1fr); }
+  .finding-grid { grid-template-columns: 1fr; }
   .pipeline { grid-template-columns: repeat(2, 1fr); }
   .pl-step::after { display: none; }
   .frontier-charts { grid-template-columns: 1fr; }
