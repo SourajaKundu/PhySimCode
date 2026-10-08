@@ -17,12 +17,11 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#results">Skip to benchmark results</a>
 
-<nav class="topnav" id="topnav" aria-label="Main navigation">
+<nav class="topnav" id="topnav">
   <a class="brand" href="#top"><span class="brand-mark">⟨φ⟩</span> PhySimCode</a>
-  <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">☰</button>
-  <div class="nav-links" id="nav-links">
+  <button class="nav-toggle" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
+  <div class="nav-links">
     <a href="#demo-sec">Demo</a>
     <a href="#results">Results</a>
     <a href="#frontier">Frontier models</a>
@@ -32,32 +31,12 @@
 </nav>
 
 <header class="hero" id="top">
+  <div class="hero-bg" aria-hidden="true"></div>
   <div class="wrap">
-    <div class="hero-layout">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="eyebrow-rule"></span> Video → physics → code</p>
-        <h1 class="title">PhySimCode<span class="title-period">.</span></h1>
-        <p class="subtitle">A Benchmark and Evaluation Method for <b>Physics Video to Code Generation</b></p>
-        <p class="hero-question">Can a model turn what it sees<br class="desktop-break"> into physics that runs?</p>
-        <p class="hero-description">Watch a simulation. Infer its laws and parameters. Write Python that recreates it. A benchmark of <strong>160.6K videos</strong> tests every step.</p>
-        <div class="buttons">
-          <a class="btn btn-color" href="#results">Explore the results <span aria-hidden="true">↗</span></a>
-          <a class="btn btn-light" href="#demo-sec">Watch the task <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="resource-links"><a class="resource-link disabled" aria-disabled="true" tabindex="-1" id="btn-paper" href="#" title="arXiv link coming soon"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>Paper <small>(arXiv soon)</small></a>
-<a class="resource-link disabled" aria-disabled="true" tabindex="-1" id="btn-code" href="#" title="Code link coming soon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>Code <small>(soon)</small></a><a class="resource-link" href="#bibtex">Cite this work ↗</a></div>
-      </div>
-      <figure class="hero-specimens">
-        <div class="specimen-head"><span>Inside the benchmark</span><span class="specimen-index">2D + 3D</span></div>
-        <div class="specimen-grid">
-          <a class="specimen specimen-orbit" href="#dataset"><img src="videos/posters/three_body_gravity.jpg" width="640" height="502" alt="Three bodies tracing gravitational orbits"><span>01 / Gravitational motion</span></a>
-          <a class="specimen" href="#dataset"><img src="videos/posters/double_pendulum_3d_chaotic.jpg" width="480" height="480" alt="A simulated three-dimensional double pendulum"><span>02 / Coupled dynamics</span></a>
-          <a class="specimen specimen-spring" href="#dataset"><img src="videos/posters/chain_of_springs.jpg" width="640" height="160" alt="Three masses linked by springs"><span>03 / Oscillation &amp; waves</span></a>
-        </div>
-        <figcaption><span>162 phenomena. Nine physical domains.</span><a href="#dataset">Browse the dataset <span aria-hidden="true">↗</span></a></figcaption>
-      </figure>
-    </div>
-    <div class="research-credit">    <div class="authors">
+    <h1 class="title"><span class="grad">PhySimCode</span></h1>
+    <p class="subtitle">A Benchmark and Evaluation Method for<br><b>Physics Video&nbsp;→&nbsp;Code</b> Generation</p>
+
+    <div class="authors">
       <span class="author"><a href="https://sites.google.com/view/sourajakundu/home" target="_blank" rel="noopener">Souraja Kundu</a><sup>1,✉</sup></span>
       <span class="author"><a href="https://www.linkedin.com/in/guptaaditya04" target="_blank" rel="noopener">Aditya Gupta</a><sup>2</sup></span>
       <span class="author"><a href="https://joeljulin.github.io/" target="_blank" rel="noopener">Joel Julin</a><sup>3</sup></span>
@@ -78,26 +57,32 @@
     </div>
     <p class="corr">✉ Corresponding author &amp; project lead</p>
 
-</div>
+    <div class="buttons">
+      <a class="btn btn-dark disabled" id="btn-paper" href="#" title="arXiv link coming soon"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>Paper <small>(arXiv soon)</small></a>
+      <a class="btn btn-dark disabled" id="btn-code" href="#" title="Code link coming soon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>Code <small>(soon)</small></a>
+      <a class="btn btn-color" href="#dataset"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" fill="none" stroke="currentColor" stroke-width="2"/></svg>Explore the dataset</a>
+      <a class="btn btn-light" href="#bibtex"><svg viewBox="0 0 24 24"><path d="M7 7h4v4H8c0 2 1 3 3 3v3c-4 0-4-4-4-6zm7 0h4v4h-3c0 2 1 3 3 3v3c-4 0-4-4-4-6z" fill="currentColor"/></svg>BibTeX</a>
+    </div>
+    <div class="tldr">
+      <span class="tldr-tag">TL;DR</span>
+      <p class="tldr-q">Can a multimodal LLM watch a <span class="hl-in">2D or 3D physics simulation</span>, work out the involved <span class="hl-mid">physics laws and parameter values</span>, and write <span class="hl-out">code from scratch</span> that regenerates it?</p>
+      <p class="tagline"><b>PhySimCode</b> is a benchmark of <b>160.6K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
+    </div>
+    <h2 class="sec-title task-title"><span class="kicker">The task</span>From pixels to physics to programs</h2>
+    <div class="io-row" aria-label="Input and output of the task">
+      <span class="io io-in"><i>1</i><b>Input</b>a physics video + engine name</span>
+      <span class="io-arr">→</span>
+      <span class="io io-model"><i>2</i><b>MLLM</b>reasons about the physics</span>
+      <span class="io-arr">→</span>
+      <span class="io io-out"><i>3</i><b>Output</b>physical law · parameter values · Python code</span>
+      <span class="io-arr">→</span>
+      <span class="io io-run"><i>4</i><b>Run it</b>regenerated video, scored vs. input</span>
+    </div>
   </div>
 </header>
 
-<main>
-
-
 <section class="demo-sec" id="demo-sec" aria-label="How one task works">
   <div class="wrap">
-
-    <div class="section-heading">
-      <h2 class="sec-title"><span class="kicker">01 / The task</span>From observation to simulation.</h2>
-      <p class="sec-sub">The model receives a video and an engine name. Its answer must explain the physics and reproduce the motion in executable code.</p>
-    </div>
-    <ol class="task-flow" aria-label="The four steps of the benchmark">
-      <li><span>01</span><div><b>Watch</b><p>A raw physics video</p></div></li>
-      <li><span>02</span><div><b>Infer</b><p>Laws and parameter values</p></div></li>
-      <li><span>03</span><div><b>Generate</b><p>A runnable Python simulation</p></div></li>
-      <li><span>04</span><div><b>Evaluate</b><p>Compare with the input</p></div></li>
-    </ol>
     <div class="demo" id="demo">
       <div class="demo-top">
         <div class="demo-steps" id="demo-steps"></div>
@@ -121,8 +106,8 @@
           </div>
         </div>
         <div class="dp dp-out" id="dp-out">
-          <div class="dp-label"><span class="dot" style="background:#6ec9b6"></span>Regenerated video <small>from the model's code</small></div>
-          <div class="gen-wrap"><video id="demo-gen" muted loop playsinline preload="auto" poster="videos/demo/generated-cover.jpg" src="videos/demo/generated.mp4"></video><div class="gen-empty" id="gen-empty">waiting for code…</div></div>
+          <div class="dp-label"><span class="dot" style="background:#c47483"></span>Regenerated video <small>from the model's code</small></div>
+          <div class="gen-wrap"><video id="demo-gen" muted loop playsinline preload="auto" src="videos/demo/generated.mp4"></video><div class="gen-empty" id="gen-empty">waiting for code…</div></div>
           <div class="scorecard" id="scorecard"></div>
         </div>
         <div class="flyer-layer" id="flyer-layer"></div>
@@ -142,61 +127,115 @@
   </div>
 </section>
 
+<section class="section" id="findings">
+  <div class="wrap">
+    <h2 class="sec-title"><span class="kicker">Key findings</span>Three consistent gaps</h2>
+    <div class="finding-grid">
+      <div class="finding" style="--c:#9a74ae">
+        <div class="big">4.5<small>/5</small> <span class="vs">vs</span> 2.47<small>/5</small></div>
+        <h4>Knowing ≠ inferring</h4>
+        <p>Nearly every model states physical laws correctly (&gt;4.5/5), but the best (GPT-5 Mini) scores only 2.47/5 at recognizing the law demonstrated in the video.</p>
+      </div>
+      <div class="finding" style="--c:#c47483">
+        <div class="big">7.7<small>%</small></div>
+        <h4>Parameters are rarely recovered</h4>
+        <p>The best model (Claude Sonnet 4.6) names <i>and</i> estimates within ±20% only 7.7% of all ground-truth parameters.</p>
+      </div>
+      <div class="finding" style="--c:#9781b5">
+        <div class="big">κ 0.72 <span class="vs">vs</span> 0.20</div>
+        <h4>Pixels ≠ dynamics</h4>
+        <p>DINOv2 and VideoCLIP agree with each other (κ = 0.717) but barely with human judgments of physics equivalence (κ ≤ 0.205). Models match appearance and miss dynamics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section alt" id="results">
   <div class="wrap">
-    <div class="section-heading">
-      <h2 class="sec-title"><span class="kicker">02 / Benchmark results</span>Knowing the laws is only the start.</h2>
-      <p class="sec-sub">Ten models evaluated on <strong>2,430 videos</strong>. Models can state valid physics, but identifying the physics in a video and recovering its parameters remain difficult.</p>
+    <h2 class="sec-title"><span class="kicker">Benchmark results</span>Ten MLLMs on 2,430 videos</h2>
+    <p class="sec-sub">162 experiments × 15 uniformly random samples (seed 42). Law scores are averaged over three LLM judges (Gemini-2.5-Flash, Grok-4.1-Fast, GPT-5-Nano). Human scores are the mean of four expert raters over 100 random samples per model. Hover a chart for exact values; click legend entries to toggle them.</p>
+
+    <h3 class="measure-title">What we measure</h3>
+    <div class="cap-grid">
+      <div class="cap"><div class="cap-ico" style="--c:#c27896">👁</div><h4>(i) Video understanding</h4><p>Extract visual features and track objects across frames.<br><span class="muted">Measured by human appearance equivalence and DINOv2 / VideoCLIP similarity.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#9a74ae">∑</div><h4>(ii) Physics understanding</h4><p>Bind what it <i>sees</i> to what it <i>knows</i>: identify the governing law and estimate parameters.<br><span class="muted">Measured by law correctness vs. equivalence and parameter recovery (±20%).</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#9781b5">&lt;/&gt;</div><h4>(iii) Programming</h4><p>Write stable simulation code that handles boundary conditions and renders a video.<br><span class="muted">Measured by compile / run / video-save rates and CodeBLEU.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#c47483">⟳</div><h4>End-to-end</h4><p>Does the regenerated video show the same physics as the input?<br><span class="muted">Measured by human ratings of physical plausibility and physics equivalence.</span></p></div>
     </div>
-    <div class="result-takeaways">
-      <div><span class="takeaway-label">Best law match</span><strong>2.47<span> / 5</span></strong><p>GPT-5 Mini · identifies the laws in the video</p></div>
-      <div><span class="takeaway-label">Best parameter recovery</span><strong>7.69<span>%</span></strong><p>Claude Sonnet 4.6 · within ±20% of ground truth</p></div>
-      <div><span class="takeaway-label">Best physics match</span><strong>2.86<span> / 5</span></strong><p>Gemini 2.5 Pro · rated by human experts</p></div>
+    <p class="note">This is not retrieval or memorization: every sample uses randomly sampled parameters drawn from physically plausible ranges, so values must be inferred from visual dynamics. Models get the engine name and an experiment-agnostic code template, so the test measures physics understanding rather than familiarity with an engine.</p>
+
+
+    <div class="tabs" data-tabs="res">
+      <button class="tab active" data-tab="laws">Know vs. infer laws</button>
+      <button class="tab" data-tab="sim">Simulation equivalence</button>
+      <button class="tab" data-tab="code">Code pipeline</button>
+      <button class="tab" data-tab="param">Parameter recovery</button>
+      <button class="tab" data-tab="table">Full table</button>
     </div>
-    <div class="table-heading"><h3>Compare the models</h3><p>Higher is better in every column. <span class="best-key">Bold cells</span> mark the best score.</p></div>
-    <p class="table-hint" id="main-table-hint">Select a column heading to sort. On smaller screens, scroll sideways to see every metric.</p>
-    <div class="table-scroll" role="region" tabindex="0" aria-label="Main benchmark comparison" aria-describedby="main-table-hint">
-      <table class="rtable sortable" id="full-table"><caption class="sr-only">Main benchmark: ten models on 2,430 videos</caption></table>
-    </div>
-    <div class="metric-guide">
-      <h3>Reading the results</h3>
-      <dl>
-        <div><dt>Law validity</dt><dd>Are the stated laws scientifically correct, regardless of the video?</dd></div>
-        <div><dt>Law match</dt><dd>Do those laws match the ones demonstrated in the input video?</dd></div>
-        <div><dt>Physics match</dt><dd>Does the regenerated video show the same physics? Rated by people.</dd></div>
-        <div><dt>Parameters recovered</dt><dd>Ground-truth parameters both named and estimated within ±20%.</dd></div>
-        <div><dt>Code runs</dt><dd>Inputs for which the generated code executes without errors.</dd></div>
-      </dl>
-    </div>
-    <details class="result-details">
-      <summary>Additional metrics <span>Appearance, video similarity &amp; code quality</span></summary>
-      <p class="note">Video similarity measures appearance and can miss incorrect dynamics. It is not a substitute for the human physics ratings above. Higher is better in every column.</p>
-      <div class="table-scroll" role="region" tabindex="0" aria-label="Additional benchmark metrics"><table class="rtable sortable" id="extra-table"></table></div>
-    </details>
-    <details class="result-details">
-      <summary>Evaluation setup <span>Sampling, judges &amp; parameter matching</span></summary>
-      <div class="method-copy">
-        <p><b>Evaluation set.</b> 162 experiments × 15 uniformly random samples (seed 42). Models receive the engine name and an experiment-agnostic code template. Parameters are sampled from physically plausible ranges.</p>
-        <p><b>Law scores.</b> Ratings from 1–5, averaged over three LLM judges: Gemini-2.5-Flash, Grok-4.1-Fast and GPT-5-Nano. Overall law validity ranges from 4.27 to 4.93, while overall law match ranges from 1.51 to 2.47.</p>
-        <p><b>Human scores.</b> Mean ratings from four expert raters on 100 randomly selected samples per model, on a 1–5 scale.</p>
-        <p><b>Parameter recovery.</b> Parameters are matched using aliases and Greek-letter abbreviations after unit normalization, then checked within ±20% of ground truth. Scene metadata, geometry, color and <i>g</i> are excluded.</p>
+
+    <div class="tab-panel active" data-panel="laws">
+      <div class="chart-head">
+        <p><b>Physical-law correctness</b> (are the stated laws true, regardless of the video?) versus <b>equivalence</b> (do they match the laws in the video?). The gap between the two bars is the model's grounding gap.</p>
+        <div class="seg" id="laws-sub">
+          <button class="active" data-i="5">Overall</button><button data-i="2">Name</button><button data-i="3">Statement</button><button data-i="4">Formula</button>
+        </div>
       </div>
-    </details>
+      <div class="chart-box tall"><canvas id="chart-laws"></canvas></div>
+    </div>
+
+    <div class="tab-panel" data-panel="sim">
+      <div class="chart-head">
+        <p>Execute each model's code and compare the regenerated video with the input. Closed models are consistently stronger, and Gemini 2.5 Pro leads every column. Patch-wise metrics are far more lenient than humans.</p>
+        <div class="seg" id="sim-sub">
+          <button class="active" data-k="human">Human ratings (1–5)</button><button data-k="patch">Patch-wise similarity</button>
+        </div>
+      </div>
+      <div class="chart-box tall"><canvas id="chart-sim"></canvas></div>
+    </div>
+
+    <div class="tab-panel" data-panel="code">
+      <div class="chart-head">
+        <p>Share of the 2,430 inputs surviving each stage: CoT extracted → code extracted → compiles → runs without error → saves the video. Almost everything compiles; open-source code often crashes at runtime. Gemini's long thinking trace truncates the code in &gt;30% of samples.</p>
+      </div>
+      <div class="chart-box tall"><canvas id="chart-code"></canvas></div>
+    </div>
+
+    <div class="tab-panel" data-panel="param">
+      <div class="chart-head">
+        <p><b>Naming recall</b> (fraction of GT parameters the model names) versus <b>value accuracy</b> (fraction of matched parameters within ±20%). Bubble area is <b>end-to-end recovery</b>. Claude and GPT-5 Mini name the most parameters; GLM-Thinking is most accurate on the few it names.</p>
+      </div>
+      <div class="chart-box tall"><canvas id="chart-param"></canvas></div>
+      <p class="note">Parameters are matched by greedy bipartite matching over Jaccard similarity on alias sets (lexical and Greek-letter abbreviations), after unit normalization. Scene metadata, geometry, color and <i>g</i> are excluded.</p>
+    </div>
+
+    <div class="tab-panel" data-panel="table">
+      <div class="table-scroll">
+        <table class="rtable sortable" id="full-table"></table>
+      </div>
+      <p class="note">Click a column header to sort. Darker cells are better within a column. Param. Acc. = end-to-end parameter recovery within ±20%.</p>
+    </div>
   </div>
 </section>
 
 <section class="section" id="frontier">
   <div class="wrap">
-    <div class="section-heading">
-      <h2 class="sec-title"><span class="kicker">03 / Frontier models</span>A closer look at the hard cases.</h2>
-      <p class="sec-sub">Four newer models join the original ten on a selected set of difficult simulations. Claude Fable 5.1 leads law matching and parameter recovery; GPT-6 Astra and Kimi K3 lead the two video-similarity metrics.</p>
+    <h2 class="sec-title"><span class="kicker">Frontier models</span>Ten hard samples, fourteen models</h2>
+    <p class="sec-sub">We hand-picked 10 hard samples (5 SciPy and 5 Kubric) and evaluated four newer frontier models, <b>Claude Fable 5.1</b>, <b>GPT-6 Astra</b>, <b>Grok 4.6</b> and <b>Kimi K3</b>, alongside the ten benchmark models. The frontier models clearly surpass the earlier models. Claude Fable 5.1 shows the strongest physics understanding, and Kimi K3 and GPT-6 Astra produce the most visually similar videos. Even so, parameter recovery stays below 20%.</p>
+
+    <div class="frontier-charts">
+      <div class="fc">
+        <h4>Law equivalence (overall, 1–5)</h4>
+        <div class="chart-box"><canvas id="chart-f-law"></canvas></div>
+      </div>
+      <div class="fc">
+        <h4>Parameter recovery (±20%)</h4>
+        <div class="chart-box"><canvas id="chart-f-param"></canvas></div>
+      </div>
+      <div class="fc">
+        <h4>Video similarity (DINOv2 / VideoCLIP)</h4>
+        <div class="chart-box"><canvas id="chart-f-vid"></canvas></div>
+      </div>
     </div>
-    <p class="scope-note"><strong>10 hard samples · 5 SciPy + 5 PyBullet.</strong> This is a separate, hand-picked evaluation set. Scores are not directly comparable with the 2,430-video benchmark above.</p>
-    <div class="table-heading"><h3>All fourteen models, one comparison</h3><p>Higher is better. Bold cells mark the best score.</p></div>
-    <div class="table-scroll" role="region" tabindex="0" aria-label="Fourteen models on ten hard samples">
-      <table class="rtable sortable" id="frontier-table"></table>
-    </div>
-    <p class="note">Law match: overall law equivalence (1–5). Parameter recovery: within ±20%. DINOv2 and VideoCLIP: cosine similarity, which measures visual resemblance rather than physical correctness. Select any heading to sort.</p>
 
     <div class="comparator" id="comparator">
       <div class="cmp-head">
@@ -232,18 +271,19 @@
 
 <section class="section alt" id="dataset">
   <div class="wrap">
-    <h2 class="sec-title"><span class="kicker">04 / Dataset explorer</span>Explore the physics, one scene at a time.</h2>
+    <h2 class="sec-title"><span class="kicker">Dataset explorer</span>162 phenomena, one sample each</h2>
     <p class="sec-sub">Filter by physical domain or engine. Hover to play, and click to open the full sample: video, structured chain-of-thought, sampled parameters and the simulation code that rendered it.</p>
     <div class="explorer-top">
+      <div class="donut-wrap"><canvas id="chart-domains"></canvas><div class="donut-center"><b id="donut-n">162</b><span id="donut-label">experiments</span></div></div>
       <div class="filters">
         <div class="chips" id="domain-chips"></div>
         <div class="filter-row">
           <div class="seg" id="engine-seg">
             <button class="active" data-e="all">All engines</button><button data-e="scipy">SciPy · 2D</button><button data-e="kubric">PyBullet · 3D</button>
           </div>
-          <input type="search" id="gallery-search" aria-label="Search experiments or physical laws" placeholder="Search experiments or laws…">
+          <input type="search" id="gallery-search" placeholder="Search experiments or laws…">
         </div>
-        <p class="muted small" id="gallery-count" role="status" aria-live="polite"></p>
+        <p class="muted small" id="gallery-count"></p>
       </div>
     </div>
     <div class="gallery" id="gallery"></div>
@@ -252,7 +292,7 @@
 
 <section class="section" id="bibtex">
   <div class="wrap narrow">
-    <h2 class="sec-title"><span class="kicker">05 / Citation</span>Build on this work.</h2>
+    <h2 class="sec-title"><span class="kicker">Citation</span>BibTeX</h2>
     <div class="bib">
       <button class="copy" data-copy="#bib-text">Copy</button>
 <pre id="bib-text">@misc{kundu2026physimcode,
@@ -267,8 +307,6 @@
   </div>
 </section>
 
-</main>
-
 <footer class="footer">
   <div class="wrap">
     <p>© 2026 the PhySimCode authors · Project lead: <a href="https://sites.google.com/view/sourajakundu/home" target="_blank" rel="noopener">Souraja Kundu</a></p>
@@ -279,7 +317,7 @@
 <!-- Modal -->
 <div class="modal" id="modal" aria-hidden="true">
   <div class="modal-backdrop" data-close></div>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-head">
+  <div class="modal-card" role="dialog" aria-modal="true">
     <button class="modal-close" data-close aria-label="Close">×</button>
     <div class="modal-head" id="modal-head"></div>
     <div class="modal-body">
@@ -292,6 +330,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
