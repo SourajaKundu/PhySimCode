@@ -703,12 +703,6 @@
     },
   })));
 
-  // prior table
-  (() => {
-    const hd = ['Benchmark', 'Video', 'Text', 'CoT', 'Code', 'Physics laws', 'Engine agnostic', '2D + 3D', '# Exp.', 'Size'];
-    $('#prior-table').innerHTML = '<thead><tr>' + hd.map(x => `<th>${x}</th>`).join('') + '</tr></thead><tbody>' +
-      P.PRIOR.map(r => `<tr class="${r[0].includes('Ours') ? 'ours' : ''}"><td>${r[0]}</td>` + r.slice(1, 8).map(v => v ? '<td class="y">✓</td>' : '<td class="n">✗</td>').join('') + `<td>${r[8]}</td><td>${r[9]}</td></tr>`).join('') + '</tbody>';
-  })();
 
   // ---------- copy buttons ----------
   document.addEventListener('click', e => {
