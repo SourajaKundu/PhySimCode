@@ -11,7 +11,7 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -23,7 +23,6 @@
   <button class="nav-toggle" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">☰</button>
   <div class="nav-links">
     <a href="#demo-sec">Demo</a>
-    <a href="#task">Task</a>
     <a href="#results">Results</a>
     <a href="#frontier">Frontier models</a>
     <a href="#dataset">Dataset explorer</a>
@@ -66,16 +65,20 @@
       <a class="btn btn-color" href="#dataset"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" fill="none" stroke="currentColor" stroke-width="2"/></svg>Explore the dataset</a>
       <a class="btn btn-light" href="#bibtex"><svg viewBox="0 0 24 24"><path d="M7 7h4v4H8c0 2 1 3 3 3v3c-4 0-4-4-4-6zm7 0h4v4h-3c0 2 1 3 3 3v3c-4 0-4-4-4-6z" fill="currentColor"/></svg>BibTeX</a>
     </div>
-    <p class="lede">Can a multimodal LLM watch a <span class="kw-in">2D or 3D physics video</span>, work out its <span class="kw-mid">laws and parameter values</span>, and write <span class="kw-out">code from scratch</span> that regenerates it?</p>
-    <p class="hero-body"><b>PhySimCode</b> is a benchmark of <b>160.6K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
+    <div class="tldr">
+      <span class="tldr-tag">TL;DR</span>
+      <p class="tldr-q">Can a multimodal LLM watch a <span class="hl-in">2D or 3D physics video</span>, work out its <span class="hl-mid">laws and parameter values</span>, and write <span class="hl-out">code from scratch</span> that regenerates it?</p>
+      <p class="tagline"><b>PhySimCode</b> is a benchmark of <b>160.6K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
+    </div>
+    <h2 class="sec-title task-title"><span class="kicker">The task</span>From pixels to physics to programs</h2>
     <div class="io-row" aria-label="Input and output of the task">
-      <span class="io io-in"><b>Input</b>a physics video + engine name</span>
+      <span class="io io-in"><i>1</i><b>Input</b>a physics video + engine name</span>
       <span class="io-arr">→</span>
-      <span class="io io-model"><b>MLLM</b>reasons about the physics</span>
+      <span class="io io-model"><i>2</i><b>MLLM</b>reasons about the physics</span>
       <span class="io-arr">→</span>
-      <span class="io io-out"><b>Output</b>physical law · parameter values · Python code</span>
+      <span class="io io-out"><i>3</i><b>Output</b>physical law · parameter values · Python code</span>
       <span class="io-arr">→</span>
-      <span class="io io-run"><b>Run it</b>regenerated video, scored vs. input</span>
+      <span class="io io-run"><i>4</i><b>Run it</b>regenerated video, scored vs. input</span>
     </div>
   </div>
 </header>
@@ -93,7 +96,7 @@
       <div class="demo-caption" id="demo-caption"></div>
       <div class="demo-stage" id="demo-stage">
         <div class="dp dp-in" id="dp-in">
-          <div class="dp-label"><span class="dot" style="background:#4a9be0"></span>Input video <small>balls in basin · SciPy 2D</small></div>
+          <div class="dp-label"><span class="dot" style="background:#ec4899"></span>Input video <small>balls in basin · SciPy 2D</small></div>
           <video id="demo-in" muted loop playsinline preload="auto" poster="videos/demo/cover.jpg" src="videos/demo/input.mp4"></video>
           <div class="frames-label">frames sent to the model (sampled at 10 fps)</div>
           <div class="frames" id="demo-frames"><img src="videos/demo/frame0.jpg" alt=""><img src="videos/demo/frame1.jpg" alt=""><img src="videos/demo/frame2.jpg" alt=""><img src="videos/demo/frame3.jpg" alt=""><img src="videos/demo/frame4.jpg" alt=""><img src="videos/demo/frame5.jpg" alt=""></div>
@@ -109,7 +112,7 @@
           </div>
         </div>
         <div class="dp dp-out" id="dp-out">
-          <div class="dp-label"><span class="dot" style="background:#e8707a"></span>Regenerated video <small>from the model's code</small></div>
+          <div class="dp-label"><span class="dot" style="background:#f43f5e"></span>Regenerated video <small>from the model's code</small></div>
           <div class="gen-wrap"><video id="demo-gen" muted loop playsinline preload="auto" src="videos/demo/generated.mp4"></video><div class="gen-empty" id="gen-empty">waiting for code…</div></div>
           <div class="scorecard" id="scorecard"></div>
         </div>
@@ -118,15 +121,6 @@
       </div>
     </div>
   </div>
-</section>
-
-<section class="strip-sec" aria-label="Sample videos from the dataset">
-  <div class="strip-head wrap">
-    <h3>A peek at the dataset <span class="muted">· 2D SciPy and 3D PyBullet, side by side</span></h3>
-    <div class="strip-nav"><button class="ctl" id="strip-prev" aria-label="Scroll left">‹</button><button class="ctl" id="strip-next" aria-label="Scroll right">›</button></div>
-  </div>
-  <div class="strip" id="strip" tabindex="0"></div>
-  <p class="wrap note center">Scroll or drag sideways · click any clip to open its code, parameters and chain-of-thought</p>
 </section>
 
 <section class="stats-band">
@@ -140,62 +134,26 @@
   </div>
 </section>
 
-<section class="section alt" id="task">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="kicker">The task</span>From pixels to physics to programs</h2>
-    <p class="sec-sub">A model watches a physics video and must emit (i) a structured chain-of-thought JSON (simulation, observation, physical law, parameters) and (ii) a self-contained Python script. We execute the script and compare the regenerated video against the input.</p>
-
-    <div class="task-flow" id="task-flow">
-      <div class="tf-card tf-input">
-        <div class="tf-label"><span class="dot" style="background:#4a9be0"></span>Input video</div>
-        <video id="tf-ref" muted loop playsinline autoplay preload="auto" src="videos/demo/input.mp4"></video>
-        <div class="tf-note">balls_in_basin #918 · engine: <code>scipy</code></div>
-      </div>
-      <div class="tf-arrow"><span>MLLM</span></div>
-      <div class="tf-card tf-mid">
-        <div class="tf-label"><span class="dot" style="background:#8c7ae6"></span>Chain-of-thought <small>(JSON · scroll to read)</small></div>
-        <pre class="tf-code wrapjson" id="tf-cot"></pre>
-        <div class="tf-label" style="margin-top:.6rem"><span class="dot" style="background:#38b2a0"></span>Simulation code <small>(Python · scroll to read)</small></div>
-        <pre class="tf-code small" id="tf-code"></pre>
-      </div>
-      <div class="tf-arrow"><span>execute</span></div>
-      <div class="tf-card tf-output">
-        <div class="tf-label"><span class="dot" style="background:#e8707a"></span>Regenerated video</div>
-        <video id="tf-gen" muted loop playsinline autoplay preload="auto" src="videos/demo/generated.mp4"></video>
-        <div class="tf-note">by Gemini 2.5 Pro · law equivalence 4.0/5 · 1/8 params within ±20%</div>
-      </div>
-    </div>
-
-    <div class="cap-grid">
-      <div class="cap"><div class="cap-ico" style="--c:#4a9be0">👁</div><h4>(i) Video understanding</h4><p>Extract visual features and track objects across frames.<br><span class="muted">Measured by human appearance equivalence and DINOv2 / VideoCLIP similarity.</span></p></div>
-      <div class="cap"><div class="cap-ico" style="--c:#8c7ae6">∑</div><h4>(ii) Physics understanding</h4><p>Bind what it <i>sees</i> to what it <i>knows</i>: identify the governing law and estimate parameters.<br><span class="muted">Measured by law correctness vs. equivalence and parameter recovery (±20%).</span></p></div>
-      <div class="cap"><div class="cap-ico" style="--c:#38b2a0">&lt;/&gt;</div><h4>(iii) Programming</h4><p>Write stable simulation code that handles boundary conditions and renders a video.<br><span class="muted">Measured by compile / run / video-save rates and CodeBLEU.</span></p></div>
-      <div class="cap"><div class="cap-ico" style="--c:#e8707a">⟳</div><h4>End-to-end</h4><p>Does the regenerated video show the same physics as the input?<br><span class="muted">Measured by human ratings of physical plausibility and physics equivalence.</span></p></div>
-    </div>
-    <p class="note">This is not retrieval or memorization: every sample uses randomly sampled parameters drawn from physically plausible ranges, so values must be inferred from visual dynamics. Models get the engine name and an experiment-agnostic code template, so the test measures physics understanding rather than familiarity with an engine.</p>
-  </div>
-</section>
-
 <section class="section" id="findings">
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Key findings</span>Four consistent gaps</h2>
     <div class="finding-grid">
-      <div class="finding" style="--c:#8c7ae6">
+      <div class="finding" style="--c:#b84fd6">
         <div class="big">4.5<small>/5</small> <span class="vs">vs</span> 2.47<small>/5</small></div>
         <h4>Knowing ≠ inferring</h4>
         <p>Nearly every model states physical laws correctly (&gt;4.5/5), but the best (GPT-5 Mini) scores only 2.47/5 at recognizing the law demonstrated in the video.</p>
       </div>
-      <div class="finding" style="--c:#e8707a">
+      <div class="finding" style="--c:#f43f5e">
         <div class="big">7.7<small>%</small></div>
         <h4>Parameters are rarely recovered</h4>
         <p>The best model (Claude Sonnet 4.6) names <i>and</i> estimates within ±20% only 7.7% of all ground-truth parameters.</p>
       </div>
-      <div class="finding" style="--c:#38b2a0">
+      <div class="finding" style="--c:#a855f7">
         <div class="big">κ 0.72 <span class="vs">vs</span> 0.20</div>
         <h4>Pixels ≠ dynamics</h4>
         <p>DINOv2 and VideoCLIP agree with each other (κ = 0.717) but barely with human judgments of physics equivalence (κ ≤ 0.205). Models match appearance and miss dynamics.</p>
       </div>
-      <div class="finding" style="--c:#f08c3c">
+      <div class="finding" style="--c:#8b5cf6">
         <div class="big">50.1<small>%</small> <span class="vs">vs</span> 83.1<small>%</small></div>
         <h4>Open vs. closed code</h4>
         <p>Open-source code runs without error 50.1% of the time on average, versus 83.1% for closed models. Claude Sonnet 4.6 is the most reliable at 98.8%.</p>
@@ -208,6 +166,16 @@
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Benchmark results</span>Ten MLLMs on 2,430 videos</h2>
     <p class="sec-sub">162 experiments × 15 uniformly random samples (seed 42). Law scores are averaged over three LLM judges (Gemini-2.5-Flash, Grok-4.1-Fast, GPT-5-Nano). Human scores are the mean of four expert raters over 100 random samples per model. Hover a chart for exact values; click legend entries to toggle them.</p>
+
+    <h3 class="measure-title">What we measure</h3>
+    <div class="cap-grid">
+      <div class="cap"><div class="cap-ico" style="--c:#ec4899">👁</div><h4>(i) Video understanding</h4><p>Extract visual features and track objects across frames.<br><span class="muted">Measured by human appearance equivalence and DINOv2 / VideoCLIP similarity.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#b84fd6">∑</div><h4>(ii) Physics understanding</h4><p>Bind what it <i>sees</i> to what it <i>knows</i>: identify the governing law and estimate parameters.<br><span class="muted">Measured by law correctness vs. equivalence and parameter recovery (±20%).</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#a855f7">&lt;/&gt;</div><h4>(iii) Programming</h4><p>Write stable simulation code that handles boundary conditions and renders a video.<br><span class="muted">Measured by compile / run / video-save rates and CodeBLEU.</span></p></div>
+      <div class="cap"><div class="cap-ico" style="--c:#f43f5e">⟳</div><h4>End-to-end</h4><p>Does the regenerated video show the same physics as the input?<br><span class="muted">Measured by human ratings of physical plausibility and physics equivalence.</span></p></div>
+    </div>
+    <p class="note">This is not retrieval or memorization: every sample uses randomly sampled parameters drawn from physically plausible ranges, so values must be inferred from visual dynamics. Models get the engine name and an experiment-agnostic code template, so the test measures physics understanding rather than familiarity with an engine.</p>
+
 
     <div class="tabs" data-tabs="res">
       <button class="tab active" data-tab="laws">Know vs. infer laws</button>
@@ -347,23 +315,23 @@
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Dataset construction</span>Expert-curated, procedurally scaled, debiased</h2>
     <div class="pipeline">
-      <div class="pl-step" style="--c:#4a9be0">
+      <div class="pl-step" style="--c:#ec4899">
         <div class="pl-num">1</div><h4>Ideation</h4>
         <p>4 human experts curate <b>69</b> simulation ideas. Claude Opus 4.7 and GPT-5.5 propose <b>300</b> more, and the experts keep <b>93</b> for implementability and clarity of the intended physics. That gives <b>162</b> experiments, each with a 3–4 line expert-written event description.</p>
       </div>
-      <div class="pl-step" style="--c:#8c7ae6">
+      <div class="pl-step" style="--c:#b84fd6">
         <div class="pl-num">2</div><h4>Coding &amp; CoT</h4>
         <p>From the expert descriptions, Claude Opus 4.7 writes the simulation code and extracts the governing laws, equations and physical parameters into a <b>13-key</b> chain-of-thought schema.</p>
       </div>
-      <div class="pl-step" style="--c:#38b2a0">
+      <div class="pl-step" style="--c:#a855f7">
         <div class="pl-num">3</div><h4>Rendering</h4>
         <p><b>Pipeline A</b> (87 exps): SciPy RK45 ODE solving (rtol 1e-9) with Matplotlib, 30 fps, 12 s. <b>Pipeline B</b> (75 exps, “Kubric”): PyBullet at 240 Hz, pyrender + trimesh PBR, 480×480. Each experiment gets ≈ 100 × <i>n</i><sub>rand</sub> samples.</p>
       </div>
-      <div class="pl-step" style="--c:#f08c3c">
+      <div class="pl-step" style="--c:#8b5cf6">
         <div class="pl-num">4</div><h4>Multi-round review</h4>
         <p>2–10 rounds of human-in-the-loop correction until each simulation is physically plausible, followed by cross-review for factual mistakes.</p>
       </div>
-      <div class="pl-step" style="--c:#e8707a">
+      <div class="pl-step" style="--c:#f43f5e">
         <div class="pl-num">5</div><h4>Debiasing</h4>
         <p>Three LLM rounds (Unicode → LaTeX/Python, physics fixes by GPT-5.5, comment stripping) make <b>14,700</b> substitutions with a total Levenshtein distance of <b>693.6K</b> characters. Four experts then verify the result.</p>
       </div>

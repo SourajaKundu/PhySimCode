@@ -39,7 +39,7 @@
   }
 
   // ---------- Chart.js defaults ----------
-  Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+  Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
   Chart.defaults.font.size = 12;
   Chart.defaults.color = '#4a5068';
   Chart.defaults.plugins.legend.labels.usePointStyle = true;
@@ -103,59 +103,10 @@
     const v = h('video', { muted: '', loop: '', playsinline: '', preload: 'metadata', class: cls || '' });
     v.muted = true; v.src = src; vidIO.observe(v); return v;
   };
-  $$('#tf-ref, #tf-gen').forEach(v => vidIO.observe(v));
 
   // ---------- data ----------
   const galleryP = getJSON('data/gallery.json');
   const hardP = getJSON('data/hard.json');
-
-  // ---------- dataset strip (equal SciPy / PyBullet, user-scrollable) ----------
-  const STRIP_K = ['multi_physics_arena', 'domino_chain', 'tumbling_dice', 'bouncing_balls_arena', 'trebuchet_throw', 'ball_pit_drop', 'stacked_discs_topple', 'granular_hourglass_3d', 'newton_cradle_3d', 'funnel_sorting', 'block_tower_projectile', 'wrecking_ball_pendulum'];
-  const STRIP_S = ['billiards_break', 'three_gear_chain', 'disk_spinoff', 'rolling_race_hoop_vs_disk_vs_sphere', 'magnet_wheel', 'brachistochrone_race', 'slab_springs_block_drop', 'three_body_gravity', 'gear_rack_spring_oscillator', 'semicircular_track', 'discs_friction_coupling', 'double_pendulum'];
-  galleryP.then(g => {
-    const by = Object.fromEntries(g.map(x => [x.experiment, x]));
-    const order = STRIP_K.flatMap((k, i) => [k, STRIP_S[i]]).filter(e => by[e]);
-    const strip = $('#strip');
-    for (let rep = 0; rep < 2; rep++) order.forEach(exp => {
-      const x = by[exp];
-      const item = h('div', { class: 'st-item', style: { '--c': domColor(x.domain), aspectRatio: `${x.w} / ${x.h}` }, 'data-exp': exp });
-      const v = h('video', { muted: '', loop: '', playsinline: '', preload: 'none', poster: `videos/posters/${exp}.jpg` });
-      v.muted = true; v.src = `videos/gallery/${exp}.mp4`; vidIO.observe(v);
-      item.append(v);
-      item.append(h('span', { class: 'st-name' }, esc(pretty(exp))));
-      item.append(h('div', { class: 'st-tag' }, `<span class="eng">${x.engine === 'scipy' ? '2D · SciPy' : '3D · PyBullet'}</span><span>${esc(x.domain)}</span>`));
-      strip.append(item);
-    });
-    // gentle auto-scroll that yields to the user
-    let pos = 0, idleUntil = 0, dragging = false, moved = 0, startX = 0, startPos = 0;
-    const SPEED = 0.06; // px per ms
-    const hold = (ms = 3000) => { idleUntil = performance.now() + ms; };
-    let lastT = performance.now();
-    const tick = t => {
-      const dt = Math.min(64, t - lastT); lastT = t;
-      const half = strip.scrollWidth / 2;
-      if (!dragging && t > idleUntil && half > strip.clientWidth) {
-        pos = strip.scrollLeft + SPEED * dt;
-        if (pos >= half) pos -= half;
-        strip.scrollLeft = pos;
-      }
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-    ['wheel', 'touchstart', 'focusin'].forEach(ev => strip.addEventListener(ev, () => hold(4000), { passive: true }));
-    strip.addEventListener('pointerenter', () => hold(1e9));
-    strip.addEventListener('pointerleave', () => { if (!dragging) hold(1500); });
-    strip.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; dragging = true; moved = 0; startX = e.clientX; startPos = strip.scrollLeft; strip.classList.add('drag'); });
-    window.addEventListener('pointermove', e => { if (!dragging) return; moved = Math.max(moved, Math.abs(e.clientX - startX)); strip.scrollLeft = startPos - (e.clientX - startX); });
-    window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; strip.classList.remove('drag'); hold(3000); });
-    strip.addEventListener('click', e => {
-      if (moved > 5) { moved = 0; return; }
-      const it = e.target.closest('.st-item'); if (it) openSample(by[it.dataset.exp]);
-    });
-    const step = dir => { hold(5000); strip.scrollBy({ left: dir * strip.clientWidth * 0.8, behavior: 'smooth' }); };
-    $('#strip-prev').onclick = () => step(-1);
-    $('#strip-next').onclick = () => step(1);
-  });
 
   // ---------- stats count-up ----------
   const statIO = new IntersectionObserver(es => es.forEach(e => {
@@ -167,13 +118,9 @@
   }));
   $$('[data-count]').forEach(b => statIO.observe(b));
 
-  // ---------- task flow + animated demo ----------
+  // ---------- animated demo ----------
   const demoP = getJSON('data/demo.json');
   const hl = (text, lang) => { try { return hljs.highlight(text, { language: lang }).value; } catch { return esc(text); } };
-  demoP.then(d => {
-    $('#tf-cot').innerHTML = hl(JSON.stringify(d.pred_cot, null, 2), 'json');
-    $('#tf-code').innerHTML = hl(d.pred_code || '', 'python');
-  });
   Promise.all([demoP, galleryP]).then(([d, g]) => initDemo(d, g));
 
   function initDemo(D, gallery) {
@@ -411,7 +358,7 @@
       chart.data.datasets.forEach((ds, i) => {
         if (!ds.pointLabel) return;
         chart.getDatasetMeta(i).data.forEach(pt => {
-          ctx.save(); ctx.font = '600 11px Inter'; ctx.fillStyle = '#1a1d2e';
+          ctx.save(); ctx.font = "600 11px 'Plus Jakarta Sans'"; ctx.fillStyle = '#1a1d2e';
           const r = pt.options.radius || 6;
           ctx.fillText(ds.pointLabel, pt.x + r + 4, pt.y + 4); ctx.restore();
         });
@@ -455,7 +402,7 @@
       const v = cols[ci][1](m);
       if (ci === 0) return `<td><span class="mdot" style="background:${gcol(m)}"></span>${esc(v)}</td>`;
       const [lo, hi] = ranges[ci], t = hi > lo ? (v - lo) / (hi - lo) : 0;
-      return `<td style="background:rgba(91,75,219,${(t * .28).toFixed(3)});${t > .97 ? 'font-weight:700' : ''}">${v}</td>`;
+      return `<td style="background:rgba(214,51,132,${(t * .28).toFixed(3)});${t > .97 ? 'font-weight:700' : ''}">${v}</td>`;
     };
     const render = () => {
       let html = '<thead><tr>' + cols.map((c, i) => `<th data-i="${i}" class="${i === sortCol ? 'sorted' + (asc ? ' asc' : '') : ''}">${c[0]}</th>`).join('') + '</tr></thead><tbody>';
