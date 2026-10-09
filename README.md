@@ -8,7 +8,7 @@ This repository contains the evaluation code for PhySimCode. Given only a video 
 
 ## Benchmark data
 
-The evaluation set has **2,430 videos**: 162 physics phenomena × 15 samples, drawn from the full 160,655-sample PhySimCode corpus.
+The evaluation set has **2,430 videos**: 162 physics phenomena × 15 samples, drawn from the full 160,614-sample PhySimCode corpus.
 
 | Engine | Folder | Samples | Video |
 |---|---|---|---|
@@ -77,14 +77,13 @@ All scores are written to `eval_outputs/my_model/`. Re-running any command resum
 |---|---|
 | Table 3 (law correctness, law equivalence), Table 5 (CodeBLEU, compile / run / video rates) | `python eval/aggregate.py` |
 | Table 5 split by engine | `python eval/aggregate_per_engine.py` (add your model to `OPEN` or `CLOSED` at the top) |
+| Table 9, Table 5 parameter accuracy (±20%) | `python eval/eval_parameters.py` (Table 5 reports the end-to-end recovery) |
 | Table 4 (DINOv2, VideoCLIP) | `python eval/make_video_sim_report.py my_model` |
 | Fig. 4 (inter-judge Cohen's κ) | `python eval/compute_kappa.py my_model` |
 | Appendix A.9 (judge agreement) | `python eval/judge_stats.py --in eval_outputs/my_model/eval_results.jsonl --model my_model` |
 | Per-model summary | `python eval/make_model_report.py my_model` |
 
 The judges score each field on a 0–4 scale; the paper reports these as a 1–5 Likert scale (score + 1).
-
-The parameter-recovery score (±20%, Tables 5 and 9) will be added soon.
 
 ## Citation
 
