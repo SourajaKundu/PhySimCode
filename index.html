@@ -66,7 +66,7 @@
     <div class="tldr">
       <span class="tldr-tag">TL;DR</span>
       <p class="tldr-q">Can a multimodal LLM watch a <span class="hl-in">2D or 3D physics simulation</span>, work out the involved <span class="hl-mid">physics laws and parameter values</span>, and write <span class="hl-out">code from scratch</span> that regenerates it?</p>
-      <p class="tagline"><b>PhySimCode</b> is a benchmark of <b>160.6K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
+      <p class="tagline"><b>PhySimCode</b> is a compact and challenging benchmark of <b>2,430</b> evaluation videos drawn from <b>160.6K</b> procedurally generated physics videos covering <b>162 phenomena</b>, rendered by two different engines (SciPy in 2D, PyBullet in 3D). Every video comes with the code that made it, its true parameter values and a step-by-step physics explanation, so a model's answer can be checked at every level.</p>
     </div>
     <h2 class="sec-title task-title"><span class="kicker">The task</span>From pixels to physics to programs</h2>
     <div class="io-row" aria-label="Input and output of the task">
@@ -152,7 +152,7 @@
 <section class="section alt" id="results">
   <div class="wrap">
     <h2 class="sec-title"><span class="kicker">Benchmark results</span>Ten MLLMs on 2,430 videos</h2>
-    <p class="sec-sub">162 experiments × 15 uniformly random samples (seed 42). Law scores are averaged over three LLM judges (Gemini-2.5-Flash, Grok-4.1-Fast, GPT-5-Nano). Human scores are the mean of four expert raters over 100 random samples per model. Hover a chart for exact values; click legend entries to toggle them.</p>
+    <p class="sec-sub"><b>Why 2,430 and not 160.6K?</b> Within a phenomenon only the parameter values change, so 15 random samples per phenomenon keep API costs low while bounding every metric to a 95% confidence interval of about ±2%. 162 experiments × 15 uniformly random samples (seed 42). Law scores are averaged over three LLM judges (Gemini-2.5-Flash, Grok-4.1-Fast, GPT-5-Nano). Human scores are the mean of four expert raters over 100 random samples per model. Hover a chart for exact values; click legend entries to toggle them.</p>
 
     <h3 class="measure-title">What we measure</h3>
     <div class="cap-grid">
