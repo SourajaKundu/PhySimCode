@@ -1,6 +1,6 @@
 # PhySimCode: A Benchmark and Evaluation Method for Physics Video to Code Generation
 
-[**Website**](https://sourajakundu.github.io/PhySimCode/) · **Paper** (arXiv, coming soon) · [**Dataset**](https://huggingface.co/datasets/SourajaKundu123/PhySimCode)
+[**Website**](https://sourajakundu.github.io/PhySimCode/) · [**Paper**](https://arxiv.org/abs/2610.15722) · [**Dataset**](https://huggingface.co/datasets/SourajaKundu123/PhySimCode)
 
 Can a multimodal LLM watch a 2D or 3D physics simulation, work out the involved physics laws and parameter values, and write code from scratch that regenerates it?
 
@@ -89,12 +89,15 @@ The judges score each field on a 0–4 scale; the paper reports these as a 1–5
 
 ```bibtex
 @misc{kundu2026physimcode,
-  title  = {PhySimCode: A Benchmark and Evaluation Method for
-            Physics Video to Code Generation},
-  author = {Kundu, Souraja and Gupta, Aditya and Julin, Joel and
-            Zhao, Yizhou and Xie, Liuyue and Jeni, Laszlo A.},
-  year   = {2026},
-  note   = {arXiv preprint (coming soon)}
+  title         = {PhySimCode: A Benchmark and Evaluation Method for
+                   Physics Video to Code Generation},
+  author        = {Kundu, Souraja and Gupta, Aditya and Julin, Joel and
+                   Zhao, Yizhou and Xie, Liuyue and Jeni, Laszlo A.},
+  year          = {2026},
+  eprint        = {2610.15722},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2610.15722}
 }
 ```
 
